@@ -43,4 +43,10 @@ export function EmptyState({
   );
 }
 
-export { SocialShell, SocialIcon } from "./social";
+export {
+  SocialShell,
+  SocialIcon,
+  ProfileView,
+  StoryStrip,
+  DesignPreview,
+} from "./social";

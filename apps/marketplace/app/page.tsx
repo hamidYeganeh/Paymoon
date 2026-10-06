@@ -1,42 +1,29 @@
-import { SocialIcon } from "@paymoon/ui";
+import { SocialIcon, StoryStrip } from "@paymoon/ui";
 export default function Page() {
   return (
     <>
-      <div className="stories">
-        {[
-          ["سبک شما", "user"],
-          ["پوشاک", "grid"],
-          ["خانه", "home"],
-          ["اکسسوری", "bag"],
-        ].map(([label, icon]) => (
-          <a className="story" href="/search" key={label}>
-            <span className="avatar">
-              <SocialIcon name={icon!} />
-            </span>
-            {label}
-          </a>
-        ))}
-      </div>
-      <div className="feed-tabs">
-        <strong>برای شما</strong>
-        <a href="/search">کشف فروشگاه‌ها</a>
-      </div>
+      <StoryStrip />
       <section className="empty-feed">
         <div className="empty-icon">
-          <SocialIcon name="bag" />
+          <SocialIcon name="camera" />
         </div>
-        <h1>کشف‌های بعدی شما، همین‌جا</h1>
+        <h1>به Paymoon خوش آمدید</h1>
         <p>
-          محصولات و فروشگاه‌ها بعد از انتشار در این فید نمایش داده می‌شوند. هنوز
-          محصولی منتشر نشده است.
+          اینجا محصولات و فروشگاه‌هایی را می‌بینید که دوست دارید. اولین کشف شما
+          از همین‌جا شروع می‌شود.
         </p>
-        <a href="/search" className="button">
-          جست‌وجوی محصولات
+        <a className="button" href="/search">
+          کشف فروشگاه‌ها
         </a>
       </section>
-      <div className="notice">
-        Paymoon در حال آماده‌سازی است. خرید و پرداخت هنوز فعال نیست.
-      </div>
+      <p className="quiet-note">
+        هنوز محصولی منتشر نشده است. خرید فعلاً فعال نیست.
+      </p>
+      <p className="quiet-note">
+        <a href="/preview" className="text-link">
+          دیدن نمونهٔ ظاهر فید
+        </a>
+      </p>
     </>
   );
 }
