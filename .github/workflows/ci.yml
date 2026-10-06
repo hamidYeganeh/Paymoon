@@ -1,0 +1,67 @@
+name: Validate
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: paymoon
+          POSTGRES_PASSWORD: ci_only
+          POSTGRES_DB: paymoon_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U paymoon -d paymoon_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7.4-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      COMMERCE_DATABASE_URL: postgresql://paymoon:ci_only@localhost:5432/paymoon_test
+      COMMERCE_DATABASE_TEST_URL: postgresql://paymoon:ci_only@localhost:5432/paymoon_test
+      COMMERCE_REDIS_URL: redis://localhost:6379/0
+      COMMERCE_REDIS_TEST_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm db:migrate
+      - run: pnpm test
+
+  android:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [marketplace, seller]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@v3
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec turbo run android:apk --filter=@paymoon/${{ matrix.app }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paymoon-${{ matrix.app }}-debug
+          path: apps/${{ matrix.app }}/android/app/build/outputs/apk/debug/*.apk

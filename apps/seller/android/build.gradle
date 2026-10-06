@@ -1,0 +1,46 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.0'
+        classpath 'com.google.gms:google-services:4.4.4'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+apply from: "variables.gradle"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+// pnpm shares plugin sources; keep Gradle outputs isolated per application.
+subprojects {
+    if (project.name != "app") layout.buildDirectory.set(file("${rootProject.projectDir}/build/modules/${project.name}"))
+}
+
+// Align the legacy Cordova transitive dependency with AndroidX Core's version.
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'androidx.tracing' && details.requested.name == 'tracing') {
+                details.useVersion '1.2.0'
+                details.because 'Use one stable tracing version across Capacitor and Cordova modules'
+            }
+        }
+    }
+}

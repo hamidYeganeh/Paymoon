@@ -1,0 +1,43 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "globalEnv": ["NODE_ENV"],
+  "globalDependencies": [".nvmrc", ".env"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+      "env": ["NEXT_PUBLIC_*", "CAPACITOR_BUILD"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "env": ["COMMERCE_DATABASE_TEST_URL", "COMMERCE_REDIS_TEST_URL"],
+      "outputs": []
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true,
+      "env": ["COMMERCE_*", "LOG_LEVEL", "INSTAGRAM_*", "NEXT_PUBLIC_*"]
+    },
+    "android:sync": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "env": ["NEXT_PUBLIC_*"],
+      "outputs": ["out/**"]
+    },
+    "android:apk": {
+      "dependsOn": ["android:sync"],
+      "cache": false,
+      "env": ["JAVA_HOME", "ANDROID_HOME", "ANDROID_SDK_ROOT"],
+      "outputs": ["android/app/build/outputs/apk/debug/*.apk"]
+    }
+  }
+}

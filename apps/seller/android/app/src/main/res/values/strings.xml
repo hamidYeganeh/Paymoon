@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Paymoon Seller</string>
+    <string name="title_activity_main">Paymoon Seller</string>
+    <string name="package_name">com.paymoon.seller</string>
+    <string name="custom_url_scheme">com.paymoon.seller</string>
+</resources>

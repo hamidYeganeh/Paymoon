@@ -1,0 +1,28 @@
+{
+  "name": "paymoon",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=24 <27"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "node tooling/scripts/boundaries.mjs && turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:migrate": "pnpm --filter @paymoon/db migrate",
+    "dev:api": "pnpm --filter @paymoon/commerce-api dev",
+    "dev:seller": "pnpm --filter @paymoon/seller dev",
+    "infra:up": "docker compose up -d --wait",
+    "android:sync": "turbo run android:sync",
+    "android:apk": "turbo run android:apk"
+  },
+  "devDependencies": {
+    "prettier": "3.9.6",
+    "turbo": "^2.11.7",
+    "typescript": "catalog:"
+  }
+}

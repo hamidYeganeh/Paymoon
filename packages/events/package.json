@@ -1,0 +1,30 @@
+{
+  "name": "@paymoon/events",
+  "private": true,
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@paymoon/db": "workspace:*",
+    "bullmq": "^5.58.5",
+    "@paymoon/observability": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/pg": "8.23.1"
+  }
+}

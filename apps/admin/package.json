@@ -1,0 +1,27 @@
+{
+  "name": "@paymoon/admin",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "next dev --port 4102",
+    "build": "next build",
+    "start": "next start --port 4102",
+    "lint": "eslint app",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "@paymoon/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "eslint": "catalog:",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*"
+  }
+}
