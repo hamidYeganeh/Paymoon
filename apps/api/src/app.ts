@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { SocialModule } from "./modules/social/social.module";
 import { randomUUID } from "node:crypto";
 import { ExperienceModule } from "./modules/experience/experience.module";
@@ -188,4 +189,15 @@ export async function createApp() {
   await app.init();
   await server.ready();
   return app;
+}
+
+// Vercel detects this module because it imports @nestjs/core. Export an HTTP
+// handler and share initialization across concurrent requests in one instance.
+let serverlessApp: Promise<NestFastifyApplication> | undefined;
+export default async function handler(
+  request: IncomingMessage,
+  response: ServerResponse,
+) {
+  const app = await (serverlessApp ??= createApp());
+  app.getHttpServer().emit("request", request, response);
 }
