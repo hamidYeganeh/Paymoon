@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { MaintenanceModule } from "./modules/maintenance/maintenance.module";
 import { SocialModule } from "./modules/social/social.module";
 import { randomUUID } from "node:crypto";
 import { ExperienceModule } from "./modules/experience/experience.module";
@@ -63,6 +64,7 @@ class HealthController {
 @Module({
   imports: [
     PlatformModule,
+    MaintenanceModule,
     ExperienceModule,
     SocialModule,
     CatalogOperationsModule,
@@ -152,6 +154,17 @@ export async function createApp() {
     );
     done();
   });
+  // Await work while the invocation is alive; do not start an orphan timer in a Function.
+  if (config.COMMERCE_BACKGROUND_MODE === "request") {
+    server.addHook("preHandler", async (req) => {
+      if (!req.url.startsWith("/v1/") || req.method === "OPTIONS") return;
+      try {
+        await app.get(Store).maintenance();
+      } catch {
+        logger.error("request maintenance failed; durable work will retry");
+      }
+    });
+  }
   await app.register(helmet);
   await app.register(rateLimit, {
     max: 60,

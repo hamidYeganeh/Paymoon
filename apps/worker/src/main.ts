@@ -7,6 +7,8 @@ import {
   QUEUE,
   routeInstagramInbox,
   expireOrders,
+  consumeEvent,
+  pruneTransientData,
 } from "@paymoon/events";
 import { createLogger } from "@paymoon/logger";
 import { Queue, Worker } from "bullmq";
@@ -19,42 +21,16 @@ const redis = new Redis(config.COMMERCE_REDIS_URL, {
   connectTimeout: 3000,
 });
 const queue = new Queue(QUEUE, { connection });
-const topics = new Set([
-  "organization.created",
-  "instagram.connected",
-  "instagram.webhook.received",
-  "merchant.created",
-  "product.created",
-  "product.commented",
-  "inventory.changed",
-  "order.transitioned",
-]);
 const worker = new Worker(
   QUEUE,
   async (job) =>
     transaction(pool, async (c) => {
-      const event = (
-        await c.query("SELECT * FROM commerce.outbox WHERE id=$1 FOR UPDATE", [
-          job.data.eventId,
-        ])
-      ).rows[0];
-      if (!event) throw new Error("Event not found");
-      if (event.processed_at) return;
-      if (!topics.has(event.topic))
-        throw new Error("No handler for event topic");
-      // Durable in-app notification is the first consumer. External delivery is intentionally unimplemented.
-      await c.query(
-        "INSERT INTO commerce.notifications(organization_id,event_id,kind) VALUES($1,$2,$3) ON CONFLICT(event_id) DO NOTHING",
-        [event.payload.organizationId, event.id, event.topic],
-      );
-      await c.query(
-        "UPDATE commerce.outbox SET processed_at=now() WHERE id=$1",
-        [event.id],
-      );
-      logger.info(
-        { eventId: event.id, traceparent: event.traceparent },
-        "event processed",
-      );
+      const processed = await consumeEvent(c, job.data.eventId);
+      if (processed)
+        logger.info(
+          { eventId: job.data.eventId, traceparent: job.data.traceparent },
+          "event processed",
+        );
     }),
   { connection, concurrency: 4 },
 );
@@ -71,15 +47,7 @@ function poll() {
   active = transaction(pool, async (c) => {
     await expireOrders(c);
     if (Date.now() - lastRetention > 3600000) {
-      await c.query(
-        "DELETE FROM commerce.analytics_events WHERE created_at<now()-interval '90 days'",
-      );
-      await c.query(
-        "DELETE FROM commerce.instagram_launch_tickets WHERE expires_at<now()",
-      );
-      await c.query(
-        "DELETE FROM commerce.instagram_oauth_states WHERE expires_at<now()",
-      );
+      await pruneTransientData(c);
       lastRetention = Date.now();
     }
     await routeInstagramInbox(c);

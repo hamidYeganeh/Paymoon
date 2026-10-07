@@ -15,6 +15,8 @@ const envSchema = z.object({
     .default(
       "http://localhost:4100,http://localhost:4101,http://localhost:4102,https://localhost,http://localhost",
     ),
+  COMMERCE_BACKGROUND_MODE: z.enum(["worker", "request"]).default("worker"),
+  CRON_SECRET: z.string().min(32).optional(),
   COMMERCE_ADMIN_USER_IDS: z.string().default(""),
   COMMERCE_API_PUBLIC_URL: z.url().default("http://localhost:4000"),
   PORT: z.coerce.number().int().min(1).max(65535).optional(),

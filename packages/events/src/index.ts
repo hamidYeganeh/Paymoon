@@ -151,3 +151,75 @@ export async function expireOrders(c: PoolClient) {
   }
   return expired.length;
 }
+
+// Shared by BullMQ and the bounded serverless runner. The row lock makes
+// queue retries and concurrent cron/request delivery safe to replay.
+export const NOTIFICATION_TOPICS = [
+  "organization.created",
+  "instagram.connected",
+  "instagram.webhook.received",
+  "merchant.created",
+  "product.created",
+  "product.commented",
+  "inventory.changed",
+  "order.transitioned",
+];
+export async function consumeEvent(c: PoolClient, eventId: string) {
+  const event = (
+    await c.query("SELECT * FROM commerce.outbox WHERE id=$1 FOR UPDATE", [
+      eventId,
+    ])
+  ).rows[0];
+  if (!event) throw new Error("Event not found");
+  if (event.processed_at) return false;
+  if (!NOTIFICATION_TOPICS.includes(event.topic))
+    throw new Error("No handler for event topic");
+  await c.query(
+    "INSERT INTO commerce.notifications(organization_id,event_id,kind) VALUES($1,$2,$3) ON CONFLICT(event_id) DO NOTHING",
+    [event.payload.organizationId, event.id, event.topic],
+  );
+  await c.query(
+    "UPDATE commerce.outbox SET published_at=COALESCE(published_at,now()),processed_at=now() WHERE id=$1",
+    [event.id],
+  );
+  return true;
+}
+export async function maintenanceBatch(c: PoolClient, retention = false) {
+  await c.query("SET LOCAL statement_timeout = '10000ms'");
+  await c.query("SET LOCAL lock_timeout = '500ms'");
+  const locked = (
+    await c.query(
+      "SELECT pg_try_advisory_xact_lock(hashtextextended('paymoon-maintenance',0)) AS acquired",
+    )
+  ).rows[0].acquired;
+  if (!locked)
+    return { skipped: true, expiredOrders: 0, inbox: 0, notifications: 0 };
+  const expiredOrders = await expireOrders(c);
+  const inbox = await routeInstagramInbox(c);
+  const events = (
+    await c.query(
+      "SELECT id FROM commerce.outbox WHERE processed_at IS NULL AND topic=ANY($1::text[]) ORDER BY created_at LIMIT 50 FOR UPDATE SKIP LOCKED",
+      [NOTIFICATION_TOPICS],
+    )
+  ).rows;
+  for (const event of events) await consumeEvent(c, event.id);
+  if (retention) await pruneTransientData(c);
+  return { skipped: false, expiredOrders, inbox, notifications: events.length };
+}
+
+export async function pruneTransientData(c: PoolClient) {
+  await c.query(
+    "DELETE FROM commerce.analytics_events WHERE created_at<now()-interval '90 days'",
+  );
+  await c.query(
+    "DELETE FROM commerce.instagram_launch_tickets WHERE expires_at<now()",
+  );
+  await c.query(
+    "DELETE FROM commerce.instagram_oauth_states WHERE expires_at<now()",
+  );
+  // Retain processed raw webhook data for at most 30 days plus scheduler delay.
+  // A bounded delete avoids a long-running cleanup transaction; deliveries cascade.
+  await c.query(
+    "DELETE FROM commerce.instagram_inbox WHERE id IN (SELECT id FROM commerce.instagram_inbox WHERE status='processed' AND created_at<now()-interval '30 days' ORDER BY created_at LIMIT 500 FOR UPDATE SKIP LOCKED)",
+  );
+}

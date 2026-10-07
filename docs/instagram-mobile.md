@@ -2,9 +2,9 @@
 
 ## وضعیت فعلی
 
-اتصال رسمی Instagram API with Instagram Login در backend پیاده‌سازی شده است: شروع OAuth، callback یک‌بارمصرف متصل به مرورگر و session، بررسی دوباره نقش سازمان، ذخیره توکن رمز‌شده با AES-256-GCM، دریافت پروفایل و یک صفحه رسانه، تمدید توکن، اشتراک webhook و قطع اتصال. scope پیش‌فرض فقط `instagram_business_basic` است. پیام و کامنت فقط با scope مربوط می‌توانند subscribe شوند؛ ارسال پیام، انتشار محتوا و تبدیل خودکار پست به محصول پیاده نشده‌اند.
+اتصال رسمی Instagram API with Instagram Login در backend پیاده‌سازی شده است: شروع OAuth، callback یک‌بارمصرف متصل به مرورگر و session، بررسی دوباره نقش سازمان، ذخیره توکن رمز‌شده با AES-256-GCM، دریافت پروفایل و یک صفحه رسانه، تمدید توکن، اشتراک webhook و قطع اتصال. scope پیش‌فرض فقط `instagram_business_basic` است. پیام و کامنت فقط با scope مربوط می‌توانند subscribe شوند؛ ارسال پیام و انتشار محتوا پیاده نشده‌اند. پست تصویری دریافت‌شده می‌تواند به پیش‌نویس محصول تبدیل شود؛ قیمت و موجودی را فروشنده وارد می‌کند.
 
-اپ Meta و دامنه هنوز وجود ندارند؛ اتصال زنده آزمایش نشده است. آزمون‌های adapter با پاسخ شبیه‌سازی‌شده اجرا می‌شوند؛ مسیر OAuth، RBAC و رمزنگاری با PostgreSQL واقعی محلی بررسی شده‌اند. API خاموش می‌ماند تا تنظیمات کامل وارد شوند.
+callback عمومی در https://paymoon.vercel.app آماده است. App ID، Secret و نسخهٔ API هنوز توسط مالک تنظیم نشده‌اند؛ اتصال زنده آزمایش نشده است. آزمون‌های adapter با پاسخ شبیه‌سازی‌شده اجرا می‌شوند؛ مسیر OAuth، RBAC و رمزنگاری با PostgreSQL واقعی محلی بررسی شده‌اند. API خاموش می‌ماند تا تنظیمات کامل وارد شوند.
 
 ### تنظیمات server
 
@@ -31,7 +31,7 @@
 - `POST /v1/organizations/:org/instagram/subscriptions`: اشتراک فیلدهای مجاز webhook.
 - `DELETE /v1/organizations/:org/instagram`: لغو دسترسی و حذف اتصال/رسانه‌های محلی.
 
-مسیر verify و ingest وب‌هوک در OpenAPI مشخص است. امضای HMAC روی raw body بررسی و inbox تکراری حذف می‌شود. worker بر اساس account ID متصل، هر entry را به سازمان صحیح اختصاص داده و رویداد outbox می‌سازد. حساب ناشناس به سازمانی نسبت داده نمی‌شود. inbox خام فعلاً برای پردازش نگه داشته می‌شود؛ retention و حذف داده قبل از production ضروری است.
+مسیر verify و ingest وب‌هوک در OpenAPI مشخص است. امضای HMAC روی raw body بررسی و inbox تکراری حذف می‌شود. worker بر اساس account ID متصل، هر entry را به سازمان صحیح اختصاص داده و رویداد outbox می‌سازد. حساب ناشناس به سازمانی نسبت داده نمی‌شود. inbox پردازش‌شده پس از ۳۰ روز در batch نگهداری پاک می‌شود؛ inbox پردازش‌نشده برای retry نگه داشته می‌شود. مسیرهای رسمی حذف داده و deauthorization برای عرضه عمومی هنوز باید تکمیل شوند.
 
 ### migration
 
@@ -39,7 +39,7 @@
 
 ## Android با Capacitor 8
 
-اپ‌های marketplace و seller خروجی static مستقل را داخل APK بسته‌بندی می‌کنند. صفحه‌ها برای بازشدن به دامنه نیاز ندارند. شناسه‌های فعلی `com.paymoon.marketplace` و `com.paymoon.seller` هستند. API راه دور و احراز هویت UI هنوز وصل نشده‌اند؛ این خروجی پوسته قابل نصب است، نه فروشگاه عملیاتی.
+اپ‌های marketplace و seller خروجی static مستقل را داخل APK بسته‌بندی می‌کنند. صفحه‌ها برای بازشدن به دامنه نیاز ندارند. شناسه‌های فعلی `com.paymoon.marketplace` و `com.paymoon.seller` هستند. API راه دور، ورود و گردش کار فروشگاه به UI وصل‌اند. APKهای آنلاین با https://paymoon.vercel.app ساخته شده‌اند؛ نصب روی دستگاه واقعی هنوز تأیید نشده است.
 
 پیش‌نیاز: Node مطابق پروژه، JDK 21 و Android SDK 36. مسیر JDK را در `JAVA_HOME` و مسیر SDK را در `ANDROID_HOME` مشخص کنید.
 
@@ -53,11 +53,11 @@ pnpm exec turbo run android:apk --filter=@paymoon/seller
 خروجی هر اپ: `apps/<app>/android/app/build/outputs/apk/debug/app-debug.apk`.
 برای انتشار، keystore خصوصی، امضای release و versioning لازم است؛ build فعلی debug است. CI ساخت debug و artifact برای هر دو اپ دارد. build افزونه‌های Gradle به‌ازای هر اپ جدا شده تا pnpm shared node_modules موجب race نشود.
 
-ورود Meta در APK هنوز UI ندارد: کوکی OAuth متعلق به مرورگر شروع‌کننده است؛ انتقال کور URL از WebView به مرورگر دیگر صحیح نیست. گام بعد باید ورود سیستم‌مرورگر با یک launch ticket کوتاه‌عمر، callback و Verified App Links و بازگشت امن را همراه دامنه واقعی تکمیل کند. Secret و access token هرگز داخل APK قرار نمی‌گیرند.
+ورود Meta در وب و APK از launch ticket یک‌بارمصرف ۵دقیقه‌ای و مرورگر سیستم روی مبدأ API استفاده می‌کند تا کوکی OAuth در همان مرورگر callback باقی بماند. callback فعلاً از کاربر می‌خواهد به اپ برگردد و صفحه را تازه کند؛ Verified App Links و بازگشت خودکار به اپ هنوز پیاده نشده‌اند. Secret و access token هرگز داخل APK قرار نمی‌گیرند.
 
 ## UI/UX
 
-پوسته فارسی و RTL با نوار پایین پنج‌گزینه‌ای، فید آماده دریافت محصولات، میان‌برهای دایره‌ای، پروفایل فروشگاه، آمار خالی، تب محصولات و مسیر onboarding ساخته شده است. اطلاعات ساختگی نمایش داده نمی‌شود. رنگ برند Paymoon حفظ شده؛ قابلیت‌های آماده‌نشده به‌روشنی مشخص‌اند. این مرحله شامل فرم‌های عملیاتی و checkout نیست.
+پوسته فارسی و RTL با نوار پایین پنج‌گزینه‌ای، فید آماده دریافت محصولات، میان‌برهای دایره‌ای، پروفایل فروشگاه، آمار خالی، تب محصولات و مسیر onboarding ساخته شده است. اطلاعات ساختگی نمایش داده نمی‌شود. رنگ برند Paymoon حفظ شده؛ قابلیت‌های آماده‌نشده به‌روشنی مشخص‌اند. فرم‌های محصول، موجودی، سفارش و checkout به API وصل شده‌اند؛ پرداخت فعلاً sandbox است.
 
 مراجع مشاهده‌شده در Mobbin:
 
@@ -70,3 +70,13 @@ pnpm exec turbo run android:apk --filter=@paymoon/seller
 - [Instagram Login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/)
 - [محیط Capacitor](https://capacitorjs.com/docs/getting-started/environment-setup)
 - [Next static export](https://nextjs.org/docs/app/guides/static-exports)
+
+## تنظیم فعلی Vercel
+
+- OAuth redirect: `https://paymoon.vercel.app/v1/instagram/oauth/callback`
+- Webhook: `https://paymoon.vercel.app/v1/instagram/webhook`
+- وب‌اپ فروشنده: `https://paymoon-seller.vercel.app/instagram`
+
+مالک باید URLها را در Meta ثبت و `INSTAGRAM_APP_ID`، `INSTAGRAM_APP_SECRET` و `INSTAGRAM_API_VERSION` را در env API ذخیره کند؛ سپس API دوباره منتشر شود. کلیدها و access token را در چت یا Git قرار ندهید. Verify token و کلید رمزگذاری از قبل سمت سرور تنظیم شده‌اند. کلید رمزگذاری موجود را بدون مهاجرت توکن‌ها عوض نکنید. واردکردن پست خودتان ابتدا با حساب Professional دارای نقش مناسب در اپ تست می‌شود؛ دسترسی عمومی به بررسی‌های Meta وابسته است.
+
+برای پردازش webhook و اعلان‌ها در Vercel رایگان، `docs/serverless-jobs.md` را ببینید. هیچ cron روزانه‌ای تضمین پردازش در دقیقهٔ دقیق نمی‌دهد.

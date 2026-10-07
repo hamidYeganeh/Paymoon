@@ -2,5 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nestjs",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../.. && pnpm exec turbo run build --filter=@paymoon/commerce-api"
+  "buildCommand": "cd ../.. && pnpm exec turbo run build --filter=@paymoon/commerce-api",
+  "crons": [
+    {
+      "path": "/internal/maintenance",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }
