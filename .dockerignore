@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+!.env.example
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/out
+**/.turbo
+**/android
+var
+outputs
+work
+*.apk

@@ -5,10 +5,11 @@
   "main": "dist/index.js",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./src/index.tsx",
       "default": "./dist/index.js"
     },
-    "./social.css": "./src/social.css"
+    "./social.css": "./src/social.css",
+    "./design-system.css": "./src/design-system.css"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -16,14 +17,23 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "react": "catalog:"
+    "@aparajita/capacitor-secure-storage": "8.0.1",
+    "@capacitor/browser": "8.0.0",
+    "@capacitor/core": "8.0.0",
+    "@paymoon/contracts": "workspace:*",
+    "@phosphor-icons/react": "^2.1.10",
+    "@ssgoi/react": "7.4.0",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
-    "typescript": "catalog:",
-    "@types/node": "catalog:",
-    "eslint": "catalog:",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/react": "catalog:"
-  }
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "type": "module"
 }

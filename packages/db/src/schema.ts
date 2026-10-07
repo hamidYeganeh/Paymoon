@@ -66,6 +66,15 @@ export const merchants = commerce.table(
       .references(() => organizations.id),
     displayName: text("display_name").notNull(),
     instagramHandle: text("instagram_handle"),
+    bio: text("bio").notNull().default(""),
+    shippingFeeMinor: bigint("shipping_fee_minor", { mode: "bigint" })
+      .notNull()
+      .default(0n),
+    shippingDays: integer("shipping_days").notNull().default(3),
+    returnPolicy: text("return_policy").notNull().default(""),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     status: text("status").notNull().default("draft"),
     createdAt: created(),
   },
@@ -91,6 +100,13 @@ export const products = commerce.table(
     categoryId: uuid("category_id").references(() => categories.id),
     title: text("title").notNull(),
     status: text("status").notNull().default("draft"),
+    description: text("description").notNull().default(""),
+    media: jsonb("media").notNull().default([]),
+    sourceMediaId: text("source_media_id"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    version: integer("version").notNull().default(1),
     embedding: vector("embedding", { dimensions: 1536 }),
     createdAt: created(),
   },
@@ -157,6 +173,16 @@ export const orders = commerce.table("orders", {
   organizationId: uuid("organization_id")
     .notNull()
     .references(() => organizations.id),
+  shippingAddress: jsonb("shipping_address").notNull().default({}),
+  shippingFeeMinor: bigint("shipping_fee_minor", { mode: "bigint" })
+    .notNull()
+    .default(0n),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  trackingCode: text("tracking_code"),
+  carrier: text("carrier"),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   buyerId: uuid("buyer_id")
     .notNull()
     .references(() => users.id),
@@ -325,3 +351,149 @@ export const instagramDeliveries = commerce.table(
   },
   (t) => [primaryKey({ columns: [t.inboxId, t.entryIndex] })],
 );
+
+export const orderItems = commerce.table(
+  "order_items",
+  {
+    id: id(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id),
+    variantId: uuid("variant_id")
+      .notNull()
+      .references(() => variants.id),
+    title: text("title").notNull(),
+    sku: text("sku").notNull(),
+    attributes: jsonb("attributes").notNull(),
+    quantity: integer("quantity").notNull(),
+    unitPriceMinor: bigint("unit_price_minor", { mode: "bigint" }).notNull(),
+  },
+  (t) => [unique().on(t.orderId, t.variantId)],
+);
+export const addresses = commerce.table("addresses", {
+  id: id(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id),
+  label: text("label").notNull(),
+  recipient: text("recipient").notNull(),
+  phone: text("phone").notNull(),
+  province: text("province").notNull(),
+  city: text("city").notNull(),
+  postalCode: text("postal_code").notNull(),
+  address: text("address").notNull(),
+  createdAt: created(),
+});
+export const savedProducts = commerce.table(
+  "saved_products",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id),
+    createdAt: created(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.productId] })],
+);
+export const followedMerchants = commerce.table(
+  "followed_merchants",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    merchantId: uuid("merchant_id")
+      .notNull()
+      .references(() => merchants.id),
+    createdAt: created(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.merchantId] })],
+);
+export const reviews = commerce.table("reviews", {
+  id: id(),
+  orderId: uuid("order_id")
+    .notNull()
+    .unique()
+    .references(() => orders.id),
+  buyerId: uuid("buyer_id")
+    .notNull()
+    .references(() => users.id),
+  rating: integer("rating").notNull(),
+  body: text("body").notNull(),
+  createdAt: created(),
+});
+export const supportTickets = commerce.table("support_tickets", {
+  id: id(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id),
+  orderId: uuid("order_id").references(() => orders.id),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  status: text("status").notNull().default("open"),
+  reply: text("reply"),
+  createdAt: created(),
+});
+export const userNotifications = commerce.table("user_notifications", {
+  id: id(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id),
+  orderId: uuid("order_id").references(() => orders.id),
+  kind: text("kind").notNull(),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: created(),
+});
+export const analyticsEvents = commerce.table("analytics_events", {
+  id: id(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id),
+  organizationId: uuid("organization_id").references(() => organizations.id),
+  name: text("name").notNull(),
+  properties: jsonb("properties").notNull().default({}),
+  createdAt: created(),
+});
+export const instagramLaunchTickets = commerce.table(
+  "instagram_launch_tickets",
+  {
+    digest: text("digest").primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    sessionHash: text("session_hash")
+      .notNull()
+      .references(() => sessions.tokenHash, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+);
+
+export const productLikes = commerce.table(
+  "product_likes",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id),
+    createdAt: created(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.productId] })],
+);
+export const productComments = commerce.table("product_comments", {
+  id: id(),
+  productId: uuid("product_id")
+    .notNull()
+    .references(() => products.id),
+  authorId: uuid("author_id")
+    .notNull()
+    .references(() => users.id),
+  body: text("body").notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  createdAt: created(),
+});

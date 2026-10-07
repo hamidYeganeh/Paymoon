@@ -1,0 +1,1557 @@
+@font-face {
+  font-family: Vazirmatn;
+  src: url("/fonts/Vazirmatn-Regular.woff2") format("woff2");
+  font-weight: 100 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: Vazirmatn;
+  src: url("/fonts/Vazirmatn-SemiBold.woff2") format("woff2");
+  font-weight: 600 900;
+  font-display: swap;
+}
+:root {
+  --font-vazir: Vazirmatn;
+}
+/* Instagram reference geometry, adapted for Persian commerce. */
+:root {
+  --ig-bg: #fff;
+  --ig-text: #101010;
+  --ig-secondary: #737373;
+  --ig-line: #dbdbdb;
+  --ig-soft-line: #efefef;
+  --ig-surface: #f5f5f5;
+  --ig-field: #fafafa;
+  --ig-action: #0095f6;
+  --ig-action-hover: #1877f2;
+  --ig-liked: #ff3040;
+  --ig-radius: 8px;
+  --ig-max: 100%;
+  --ig-header: 58px;
+  --ig-nav: 56px;
+  --ig-sidebar: 244px;
+  --motion-fast: 180ms;
+  --motion-page: 320ms;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ig-error: #ed4956;
+  --ig-success: #16845b;
+  --ig-warning: #8d6418;
+  --ig-shadow: 0 8px 28px rgb(0 0 0 / 9%);
+}
+html[data-theme="dark"] {
+  --ig-bg: #000;
+  --ig-text: #f5f5f5;
+  --ig-secondary: #a8a8a8;
+  --ig-line: #363636;
+  --ig-soft-line: #262626;
+  --ig-surface: #262626;
+  --ig-field: #121212;
+  --ig-shadow: 0 8px 28px rgb(0 0 0 / 35%);
+}
+body {
+  font-family:
+    var(--font-vazir),
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  letter-spacing: -0.15px;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button,
+a,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+}
+a,
+button {
+  transition:
+    background-color var(--motion-fast),
+    opacity var(--motion-fast),
+    transform var(--motion-fast);
+}
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--ig-action);
+  outline-offset: 3px;
+}
+svg {
+  flex-shrink: 0;
+}
+.social-shell {
+  max-width: none;
+  min-height: 100dvh;
+  margin: 0;
+  background: var(--ig-bg);
+}
+.app-body {
+  width: 100%;
+  margin: 0 auto;
+}
+.app-content-layout {
+  min-width: 0;
+}
+.page-content {
+  padding: 0;
+}
+.edge-content {
+  padding: 0;
+}
+main {
+  min-width: 0;
+  padding-bottom: calc(var(--ig-nav) + env(safe-area-inset-bottom) + 24px);
+}
+.route-stage {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+  min-height: 60dvh;
+}
+.route-view {
+  min-height: inherit;
+  width: 100%;
+  background: var(--ig-bg);
+}
+.topbar {
+  height: calc(var(--ig-header) + env(safe-area-inset-top));
+  padding-inline: 12px;
+  border-bottom: 1px solid var(--ig-soft-line);
+  z-index: 30;
+}
+.topbar .wordmark {
+  font-family: "Brush Script MT", "Segoe Script", cursive;
+  font-weight: 700;
+  font-size: 29px;
+}
+.topbar .account-title {
+  font-size: 19px;
+  letter-spacing: 0;
+}
+.topbar .page-title {
+  font-size: 17px;
+}
+.icon-link {
+  position: relative;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: transparent !important;
+  color: var(--ig-text) !important;
+  border-radius: 8px;
+}
+.icon-link:hover {
+  background: var(--ig-surface) !important;
+}
+.desktop-nav,
+.desktop-context,
+.desktop-page-heading {
+  display: none;
+}
+.bottom-nav {
+  width: 100%;
+  height: calc(var(--ig-nav) + env(safe-area-inset-bottom));
+  background: var(--ig-bg);
+  z-index: 40;
+  left: 0;
+  transform: none;
+}
+.bottom-nav a {
+  height: 56px;
+  position: relative;
+}
+.bottom-nav a:hover {
+  background: var(--ig-field);
+}
+.bottom-nav a[aria-current="page"] {
+  font-weight: 700;
+}
+.bottom-nav svg {
+  width: 27px;
+  height: 27px;
+}
+.mobile-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--ig-liked);
+  border: 1px solid var(--ig-bg);
+  border-radius: 50%;
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+}
+.commerce-panel {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--ig-soft-line);
+}
+.commerce-panel h1 {
+  font-size: 19px;
+  font-weight: 650;
+}
+.commerce-panel h2 {
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.section-title {
+  margin-bottom: 22px;
+}
+.commerce-form {
+  gap: 18px;
+}
+.commerce-form input,
+.commerce-form textarea,
+.commerce-form select,
+.standalone-label select,
+.filter-row select,
+.search-bar input {
+  border: 1px solid var(--ig-line);
+  border-radius: 6px;
+  background: var(--ig-field);
+  color: var(--ig-text);
+  min-height: 46px;
+  padding: 12px;
+}
+.commerce-form label,
+.standalone-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ig-text);
+}
+.commerce-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+.commerce-form label:focus-within {
+  color: var(--ig-action);
+}
+.commerce-panel button,
+.commerce-form button,
+.commerce-row button,
+.filter-row button,
+.pagination button,
+.product-controls button,
+.cart-line button {
+  min-height: 40px;
+  background: var(--ig-surface);
+  color: var(--ig-text);
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.commerce-panel .primary,
+.commerce-form button[type="submit"],
+button.primary,
+a.primary {
+  background: var(--ig-action);
+  color: #fff;
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.commerce-panel .primary:hover,
+.commerce-form button[type="submit"]:hover,
+button.primary:hover,
+a.primary:hover {
+  background: var(--ig-action-hover);
+}
+button:disabled,
+.commerce-form button:disabled {
+  opacity: 0.45;
+}
+.muted,
+.aside-footnote {
+  color: var(--ig-secondary);
+}
+.status-badge {
+  background: var(--ig-surface);
+  color: var(--ig-secondary);
+  font-size: 11px;
+  border-radius: 5px;
+  padding: 3px 8px;
+}
+.error-message {
+  color: var(--ig-error);
+  background: color-mix(in srgb, var(--ig-error) 7%, var(--ig-bg));
+  border: 1px solid color-mix(in srgb, var(--ig-error) 20%, var(--ig-bg));
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.sandbox-banner {
+  background: color-mix(in srgb, var(--ig-warning) 9%, var(--ig-bg));
+  color: var(--ig-warning);
+  padding: 14px;
+  border-radius: 8px;
+}
+.commerce-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  gap: 12px;
+  padding: 64px 24px;
+  min-height: 300px;
+  color: var(--ig-secondary);
+}
+.commerce-empty > svg {
+  width: 56px;
+  height: 56px;
+  color: var(--ig-text);
+}
+.commerce-empty h2 {
+  margin: 0;
+  color: var(--ig-text);
+  font-size: 22px;
+  letter-spacing: -0.5px;
+}
+.commerce-empty p {
+  max-width: 360px;
+  margin: 0;
+  line-height: 1.8;
+}
+.commerce-empty a.primary {
+  margin-top: 8px;
+  padding: 10px 24px;
+}
+.commerce-empty > a:not(.primary) {
+  color: var(--ig-action);
+  font-weight: 600;
+}
+.loading-state {
+  padding: 32px;
+  color: var(--ig-secondary);
+}
+.route-skeleton {
+  height: 300px;
+  background: var(--ig-field);
+  border-radius: 8px;
+  margin: 20px;
+  animation: ig-pulse 1.5s ease-in-out infinite;
+}
+.ig-skeletons {
+  display: grid;
+  gap: 24px;
+  padding: 20px;
+}
+.ig-skeleton-card {
+  display: grid;
+  gap: 14px;
+  max-width: 470px;
+  width: 100%;
+  margin: auto;
+}
+.ig-skeleton-line,
+.ig-skeleton-photo {
+  background: var(--ig-surface);
+  animation: ig-pulse 1.5s ease-in-out infinite;
+  border-radius: 5px;
+}
+.ig-skeleton-line {
+  height: 16px;
+  width: 65%;
+}
+.ig-skeleton-line.short {
+  width: 38%;
+}
+.ig-skeleton-photo {
+  aspect-ratio: 1;
+}
+.ig-skeleton-card.grid {
+  aspect-ratio: 1;
+  background: var(--ig-surface);
+}
+@keyframes ig-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+.ig-avatar {
+  display: inline-flex;
+  border-radius: 50%;
+  background: var(--ig-field);
+  border: 1px solid var(--ig-soft-line);
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--ig-secondary);
+  position: relative;
+  overflow: hidden;
+}
+.ig-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.ig-avatar.has-ring {
+  padding: 3px;
+  border: 2px solid #dd2a7b;
+  background: var(--ig-bg);
+}
+.ig-avatar.has-ring img {
+  border: 2px solid var(--ig-bg);
+}
+.shops-tray {
+  display: flex;
+  gap: 18px;
+  padding: 20px 16px 18px;
+  overflow: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--ig-soft-line);
+}
+.shops-tray::-webkit-scrollbar {
+  display: none;
+}
+.shop-story {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  width: 74px;
+  font-size: 11px;
+}
+.shop-story strong {
+  font-weight: 400;
+  max-width: 74px;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.product-feed {
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+.commerce-post {
+  border-bottom: 1px solid var(--ig-line);
+  padding: 0 0 20px;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 470px;
+}
+.post-user {
+  padding: 12px 14px;
+  gap: 10px;
+  min-height: 58px;
+}
+.post-user > a {
+  font-weight: 600;
+  font-size: 13px;
+}
+.post-user .verified-mark {
+  color: var(--ig-action);
+  display: inline-flex;
+}
+.post-user .post-menu {
+  margin-inline-start: auto;
+}
+.post-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--ig-field);
+  border-radius: 0;
+}
+.post-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px 6px;
+}
+.post-actions a,
+.post-actions button {
+  border: 0;
+  background: transparent;
+  color: var(--ig-text);
+  padding: 0;
+  min-width: 28px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.post-actions .save-action {
+  margin-inline-start: auto;
+}
+.post-actions svg {
+  width: 26px;
+  height: 26px;
+}
+.post-actions .is-active {
+  color: var(--ig-text);
+}
+.post-copy {
+  padding: 0 14px;
+  font-size: 13px;
+}
+.post-copy > strong {
+  font-weight: 650;
+}
+.post-copy p {
+  margin: 7px 0;
+}
+.post-copy .muted {
+  font-size: 11px;
+}
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  border-top: 1px solid var(--ig-soft-line);
+}
+.product-tile {
+  display: block;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--ig-field);
+  border-radius: 0;
+  aspect-ratio: 1;
+}
+.product-tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter var(--motion-fast);
+}
+.product-tile:hover img {
+  filter: brightness(0.86);
+}
+.product-tile > strong,
+.product-tile > span:not(.tile-meta):not(.tile-multi) {
+  display: none;
+}
+.tile-meta {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 8px 8px;
+  background: linear-gradient(transparent, rgb(0 0 0 / 50%));
+  color: #fff;
+  font-size: 10px;
+  display: flex;
+  gap: 4px;
+  flex-direction: column;
+  line-height: 1.5;
+  pointer-events: none;
+}
+.tile-meta b {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tile-multi {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  color: #fff;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 30%));
+}
+.product-tile:hover {
+  transform: none;
+}
+.image-empty {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ig-surface);
+  color: var(--ig-secondary);
+  min-height: 0;
+}
+.profile-top {
+  padding: 0;
+  gap: 24px;
+  margin: 6px 0 22px;
+  min-height: 110px;
+}
+.profile-top .avatar-large {
+  width: 88px;
+  height: 88px;
+  min-width: 88px;
+  font-size: 32px;
+  background: var(--ig-field);
+  border: 1px solid var(--ig-line);
+  color: var(--ig-secondary);
+}
+.profile-stats {
+  gap: 24px;
+  justify-content: space-around;
+}
+.profile-stats b {
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 650;
+}
+.profile-stats small {
+  font-size: 12px;
+  color: var(--ig-text);
+  margin-top: 5px;
+}
+.seller-shell .commerce-panel:first-child h2 {
+  margin: 0 0 6px;
+}
+.seller-shell .commerce-panel:first-child > p {
+  margin: 4px 0;
+  line-height: 1.8;
+  font-size: 13px;
+}
+.button-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.button-row a {
+  border: 0;
+  background: var(--ig-surface);
+  color: var(--ig-text);
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-weight: 600;
+  font-size: 12px;
+  flex: 1;
+  white-space: nowrap;
+  text-align: center;
+  min-height: 38px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.button-row a:hover {
+  opacity: 0.75;
+}
+.sales-summary {
+  padding: 13px 16px;
+  border: 1px solid var(--ig-soft-line);
+  border-radius: 8px;
+  background: var(--ig-field);
+  font-size: 12px;
+  margin: 16px 0 20px;
+}
+.quick-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 24px;
+  margin: 24px 0 0;
+  overflow: auto;
+  padding-bottom: 8px;
+}
+.quick-actions > a {
+  flex: 0 0 64px;
+  font-size: 11px;
+}
+.quick-actions .story-ring {
+  background: var(--ig-field);
+  border: 1px solid var(--ig-line);
+  padding: 0;
+  width: 64px;
+  height: 64px;
+  color: var(--ig-text);
+}
+.quick-actions .story-ring > svg {
+  width: 25px;
+  height: 25px;
+  background: transparent;
+}
+.quick-actions small {
+  font-size: 11px;
+}
+.profile-tabs {
+  display: flex;
+  border-top: 1px solid var(--ig-line);
+  border-bottom: 1px solid var(--ig-soft-line);
+  justify-content: space-around;
+  margin-top: 8px;
+}
+.profile-tabs a {
+  padding: 13px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--ig-secondary);
+  border-bottom: 2px solid transparent;
+  font-size: 12px;
+}
+.profile-tabs a[aria-current="page"] {
+  border-color: var(--ig-text);
+  color: var(--ig-text);
+}
+.auth-brand {
+  font-family: "Brush Script MT", "Segoe Script", cursive;
+  font-size: 42px;
+  letter-spacing: -1.5px;
+  margin: 26px 0;
+}
+.auth-page {
+  max-width: 390px;
+  margin: 28px auto 0;
+  text-align: center;
+}
+.auth-page .commerce-form {
+  text-align: start;
+}
+.auth-page .section-title {
+  justify-content: center;
+}
+.auth-page h1 {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ig-secondary);
+}
+.auth-page p {
+  font-size: 13px;
+}
+.search-bar {
+  border: 0;
+  background: var(--ig-surface);
+  border-radius: 8px;
+  padding: 0 12px;
+  gap: 8px;
+}
+.search-bar input {
+  background: transparent;
+  border: 0;
+  outline-offset: -3px;
+  min-height: 44px;
+  padding: 10px 0;
+}
+.search-bar button {
+  background: transparent;
+  color: var(--ig-action);
+  padding: 8px;
+  min-height: 36px;
+}
+.filter-row {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.filter-row select {
+  font-size: 12px;
+  flex: 1;
+  padding: 8px;
+  min-height: 38px;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 24px;
+  font-size: 12px;
+}
+.pagination button {
+  font-size: 12px;
+  padding: 8px 14px;
+  min-height: 36px;
+}
+.media-carousel {
+  display: flex;
+  overflow: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  gap: 0;
+  border-radius: 0;
+  margin: 0 -20px 24px;
+}
+.media-carousel img {
+  scroll-snap-align: center;
+  flex: 0 0 100%;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  max-height: none;
+}
+.product-price {
+  display: block;
+  font-size: 22px;
+  margin: 20px 0 8px;
+  font-weight: 700;
+}
+.menu-list a {
+  padding: 17px 4px;
+  border-color: var(--ig-soft-line);
+  min-height: 52px;
+  font-size: 14px;
+  gap: 16px;
+}
+.menu-list a:hover {
+  background: var(--ig-field);
+}
+.commerce-table {
+  border: 1px solid var(--ig-soft-line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.commerce-table th,
+.commerce-table td {
+  padding: 14px 12px;
+  text-align: start;
+  border-color: var(--ig-soft-line);
+  font-size: 12px;
+}
+.commerce-table th {
+  background: var(--ig-field);
+  font-weight: 500;
+  color: var(--ig-secondary);
+}
+.commerce-row {
+  border-color: var(--ig-soft-line);
+  padding: 16px 0;
+  gap: 12px;
+}
+.commerce-row small {
+  color: var(--ig-secondary);
+}
+.order-card {
+  padding: 20px;
+  border: 1px solid var(--ig-soft-line);
+  border-radius: 8px;
+  background: var(--ig-bg);
+  margin: 16px 0;
+}
+.order-progress span {
+  background: var(--ig-line);
+}
+.order-progress .active {
+  background: var(--ig-action);
+}
+.order-progress small {
+  font-size: 10px;
+}
+.cart-line {
+  padding: 18px 0;
+  gap: 14px;
+}
+.cart-line img {
+  width: 72px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.cart-line input {
+  width: 62px;
+  min-height: 36px;
+  background: var(--ig-field);
+  border: 1px solid var(--ig-line);
+  border-radius: 6px;
+  color: var(--ig-text);
+}
+.cart-line button {
+  font-size: 11px;
+  background: transparent;
+  color: var(--ig-secondary);
+  padding: 8px;
+}
+.ticket-card {
+  padding: 18px;
+  border: 1px solid var(--ig-soft-line);
+  border-radius: 8px;
+  background: var(--ig-field);
+  margin: 16px 0;
+}
+.text-link {
+  color: var(--ig-action);
+  font-weight: 600;
+}
+.onboarding-steps {
+  font-size: 13px;
+  line-height: 2.2;
+  color: var(--ig-secondary);
+}
+.instagram-status {
+  background: var(--ig-field);
+  border: 1px solid var(--ig-soft-line);
+  padding: 16px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+.theme-options {
+  display: flex;
+  gap: 6px;
+  padding: 12px 4px;
+}
+.theme-options button {
+  flex: 1;
+  border: 1px solid var(--ig-line);
+  background: var(--ig-bg);
+  color: var(--ig-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.theme-options button[aria-pressed="true"] {
+  border-color: var(--ig-action);
+  color: var(--ig-action);
+  background: color-mix(in srgb, var(--ig-action) 7%, var(--ig-bg));
+}
+.share-feedback {
+  font-size: 11px;
+  color: var(--ig-secondary);
+  padding: 0 14px;
+}
+.profile-link {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--ig-action);
+  font-size: 12px;
+}
+.profile-link svg {
+  width: 14px;
+  height: 14px;
+}
+@media (min-width: 768px) {
+  :root {
+    --ig-sidebar: 72px;
+  }
+  .desktop-nav {
+    display: flex;
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: var(--ig-sidebar);
+    padding: 24px 12px 16px;
+    border-inline-end: 1px solid var(--ig-line);
+    background: var(--ig-bg);
+    z-index: 50;
+    flex-direction: column;
+  }
+  .desktop-wordmark {
+    font-family: "Brush Script MT", "Segoe Script", cursive;
+    font-size: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    margin-bottom: 24px;
+  }
+  .desktop-wordmark::first-letter {
+    font-family: Arial, sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .desktop-nav nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .desktop-nav nav > a,
+  .desktop-nav-footer > button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    position: relative;
+    min-height: 48px;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 15px;
+    color: var(--ig-text);
+    background: transparent;
+    border: 0;
+    white-space: nowrap;
+  }
+  .desktop-nav nav > a:hover,
+  .desktop-nav-footer > button:hover {
+    background: var(--ig-field);
+  }
+  .desktop-nav nav > a:hover svg {
+    transform: scale(1.06);
+    transition: transform var(--motion-fast);
+  }
+  .desktop-nav nav > a[aria-current="page"] {
+    font-weight: 700;
+  }
+  .desktop-nav nav > a > span:not(.notification-dot),
+  .desktop-nav-footer > button > span {
+    display: none;
+  }
+  .desktop-nav nav svg {
+    width: 26px;
+    height: 26px;
+  }
+  .desktop-nav-footer {
+    margin-top: auto;
+    position: relative;
+  }
+  .desktop-nav-footer > button {
+    width: 100%;
+  }
+  .account-menu {
+    position: absolute;
+    bottom: 62px;
+    inset-inline-start: 0;
+    width: 260px;
+    padding: 10px;
+    background: var(--ig-bg);
+    border: 1px solid var(--ig-soft-line);
+    border-radius: 14px;
+    box-shadow: var(--ig-shadow);
+  }
+  .account-menu > a,
+  .account-menu > button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    border: 0;
+    padding: 12px;
+    width: 100%;
+    background: transparent;
+    font-size: 13px;
+    color: var(--ig-text);
+    border-radius: 8px;
+  }
+  .account-menu > a:hover,
+  .account-menu > button:hover {
+    background: var(--ig-field);
+  }
+  .notification-dot {
+    position: absolute;
+    top: 7px;
+    inset-inline-start: 32px;
+    min-width: 17px;
+    height: 17px;
+    border-radius: 10px;
+    padding: 0 4px;
+    background: var(--ig-liked);
+    color: #fff;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--ig-bg);
+  }
+  .app-body {
+    width: auto;
+    margin-inline-start: var(--ig-sidebar);
+    padding: 28px 36px 0;
+  }
+  .app-content-layout {
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+  .topbar,
+  .bottom-nav {
+    display: none;
+  }
+  .desktop-page-heading {
+    max-width: 960px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+  }
+  .desktop-page-heading h1 {
+    font-size: 20px;
+    margin: 0;
+    font-weight: 650;
+  }
+  .feed-shell .desktop-page-heading {
+    max-width: 960px;
+  }
+  .app-content-layout > main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding-bottom: 48px;
+  }
+  .feed-shell .app-content-layout > main {
+    max-width: 630px;
+  }
+  .commerce-panel {
+    padding: 28px 32px;
+    max-width: 760px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--ig-soft-line);
+  }
+  .commerce-panel .section-title {
+    margin-bottom: 24px;
+  }
+  .commerce-post {
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--ig-line);
+    padding-bottom: 20px;
+  }
+  .post-image {
+    border: 1px solid var(--ig-soft-line);
+    border-radius: 4px;
+  }
+  .post-user,
+  .post-copy,
+  .post-actions {
+    padding-inline: 0;
+  }
+  .shops-tray {
+    border-bottom: 0;
+    padding: 0 0 28px;
+    justify-content: center;
+    max-width: 630px;
+    margin: auto;
+  }
+  .product-feed {
+    padding-top: 10px;
+  }
+  .product-grid {
+    gap: 3px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .product-tile {
+    aspect-ratio: 1;
+  }
+  .tile-meta {
+    font-size: 12px;
+    padding: 32px 12px 12px;
+  }
+  .profile-top {
+    max-width: 600px;
+    margin: 10px auto 24px;
+    gap: 48px;
+    min-height: 152px;
+  }
+  .profile-top .avatar-large {
+    width: 138px;
+    height: 138px;
+    min-width: 138px;
+    font-size: 48px;
+  }
+  .profile-stats {
+    gap: 40px;
+  }
+  .profile-stats b {
+    font-size: 20px;
+  }
+  .profile-stats small {
+    font-size: 14px;
+  }
+  .seller-shell .commerce-panel:first-child {
+    padding-bottom: 24px;
+    max-width: 900px;
+  }
+  .seller-shell .commerce-panel:first-child > h2,
+  .seller-shell .commerce-panel:first-child > p,
+  .seller-shell .commerce-panel:first-child > .button-row,
+  .seller-shell .sales-summary {
+    max-width: 600px;
+    margin-inline: auto;
+  }
+  .quick-actions {
+    max-width: 600px;
+    margin-inline: auto;
+    gap: 28px;
+  }
+  .profile-tabs {
+    max-width: 900px;
+    margin-inline: auto;
+  }
+  .seller-shell .button-row a {
+    font-size: 13px;
+    padding: 10px 20px;
+    flex: initial;
+    min-width: 130px;
+  }
+  .profile-tabs a {
+    min-width: 160px;
+  }
+  .auth-page {
+    border: 1px solid var(--ig-line);
+    border-radius: 1px;
+    margin: 48px auto;
+    padding: 30px 40px;
+    min-width: 360px;
+  }
+  .media-carousel {
+    margin-inline: 0;
+    border-radius: 6px;
+    max-width: 580px;
+    margin-inline: auto;
+  }
+  .commerce-table th,
+  .commerce-table td {
+    padding: 16px;
+    font-size: 13px;
+  }
+  .search-bar {
+    min-width: 340px;
+  }
+  .filter-row select {
+    font-size: 13px;
+  }
+  .commerce-form {
+    max-width: 600px;
+  }
+  .order-card {
+    display: block;
+  }
+  .commerce-empty {
+    padding: 80px 40px;
+    min-height: 440px;
+  }
+}
+@media (min-width: 1100px) {
+  .feed-shell .app-content-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 630px) 270px;
+    gap: 48px;
+    max-width: 960px;
+  }
+  .desktop-context {
+    display: block;
+    padding-top: 24px;
+  }
+  .signed-in-row,
+  .suggested-shop {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .signed-in-row > span,
+  .suggested-shop > span {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .signed-in-row strong,
+  .suggested-shop strong {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 160px;
+  }
+  .signed-in-row small,
+  .suggested-shop small {
+    font-size: 11px;
+    color: var(--ig-secondary);
+  }
+  .signed-in-row > .text-link,
+  .suggested-shop > .text-link {
+    margin-inline-start: auto;
+    font-size: 11px;
+  }
+  .signed-in-row {
+    margin-bottom: 26px;
+  }
+  .aside-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--ig-secondary);
+    margin-bottom: 18px;
+  }
+  .aside-heading > a {
+    font-size: 10px;
+    color: var(--ig-text);
+    font-weight: 600;
+  }
+  .suggested-shop {
+    margin: 14px 0;
+  }
+  .aside-footnote {
+    margin-top: 32px;
+    font-size: 10px;
+    line-height: 2;
+  }
+  .feed-shell .desktop-page-heading {
+    max-width: 960px;
+  }
+  .feed-shell .app-content-layout > main {
+    width: 100%;
+  }
+}
+@media (min-width: 1264px) {
+  :root {
+    --ig-sidebar: 244px;
+  }
+  .desktop-nav {
+    padding: 28px 12px 20px;
+  }
+  .desktop-wordmark {
+    justify-content: flex-start;
+    padding-inline: 12px;
+    font-size: 30px;
+    letter-spacing: -1px;
+  }
+  .desktop-wordmark::first-letter {
+    font: inherit;
+  }
+  .desktop-nav nav > a,
+  .desktop-nav-footer > button {
+    justify-content: flex-start;
+  }
+  .desktop-nav nav > a > span:not(.notification-dot),
+  .desktop-nav-footer > button > span {
+    display: inline;
+  }
+  .desktop-nav nav > a .notification-dot {
+    inset-inline-start: auto;
+    inset-inline-end: 14px;
+    top: 16px;
+  }
+  .app-body {
+    padding: 32px 40px 0;
+  }
+}
+@media (max-width: 359px) {
+  .button-row {
+    gap: 4px;
+  }
+  .button-row a {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+  .profile-stats {
+    gap: 12px;
+  }
+  .profile-top {
+    gap: 16px;
+  }
+  .quick-actions {
+    gap: 12px;
+  }
+  .commerce-panel {
+    padding-inline: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .route-skeleton,
+  .ig-skeleton-line,
+  .ig-skeleton-photo {
+    animation: none;
+  }
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+  margin-top: 24px;
+}
+.preview-grid img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+.post-art img {
+  width: 100%;
+  aspect-ratio: 1;
+  display: block;
+  object-fit: cover;
+}
+.feed-post {
+  max-width: 470px;
+  margin-inline: auto;
+}
+.post-art {
+  height: auto;
+  background: var(--ig-field);
+}
+.commerce-post .post-user {
+  display: flex;
+  align-items: center;
+}
+.post-actions .liked {
+  color: var(--ig-liked);
+}
+.comment-card {
+  display: flex;
+  gap: 14px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--ig-soft-line);
+}
+.comment-card p {
+  margin: 5px 0;
+  white-space: pre-wrap;
+}
+.comment-card time {
+  font-size: 11px;
+  color: var(--ig-secondary);
+}
+.comment-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+.comment-form input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--ig-line);
+  border-radius: 8px;
+  background: var(--ig-field);
+  color: var(--ig-text);
+  padding: 10px;
+}
+
+.commerce-post .post-image {
+  border-radius: 0;
+}
+.feed-post,
+.post-caption,
+.post-header,
+.stories,
+.demo-label {
+  background: var(--ig-bg);
+  color: var(--ig-text);
+}
+.demo-label {
+  background: var(--ig-field);
+  color: var(--ig-secondary);
+}
+.story-ring > span {
+  background: var(--ig-bg);
+  color: var(--ig-text);
+}
+.post-art {
+  background: var(--ig-field);
+}
+.avatar-small,
+.avatar-large,
+.small-avatar,
+.highlight-new,
+.own-story {
+  background: var(--ig-field);
+  color: var(--ig-secondary);
+}
+.panel-summary,
+.commerce-dashboard {
+  background: var(--ig-bg);
+  color: var(--ig-text);
+}
+.theme-options button {
+  min-height: 44px;
+}
+.post-actions button,
+.post-actions a {
+  min-width: 36px;
+  min-height: 44px;
+}
+
+.profile-tabs button {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  min-height: 52px;
+  background: var(--ig-bg);
+  color: var(--ig-secondary);
+  cursor: pointer;
+}
+.profile-tabs button[aria-selected="true"] {
+  border-bottom-color: var(--ig-text);
+  color: var(--ig-text);
+}
+.profile-tabs button span {
+  font-size: 11px;
+}
+.seller-shell .profile-top {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+.seller-shell .quick-actions {
+  margin-top: 16px;
+  gap: 18px;
+}
+.seller-shell .commerce-panel:first-child {
+  padding-top: 20px;
+  padding-bottom: 16px;
+}
+.seller-shell .sales-summary {
+  padding: 10px 14px;
+  margin: 12px 0;
+}
+
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.seller-shell .profile-name-row h2 {
+  margin: 0;
+}
+.profile-name-row .status-badge {
+  padding: 3px 6px;
+  font-size: 10px;
+}
+.seller-shell .seller-profile-summary .quick-actions {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+@media (max-width: 767px) {
+  .seller-shell .seller-profile-summary {
+    padding-top: 16px;
+    padding-bottom: 12px;
+  }
+  .seller-profile-summary .profile-top {
+    min-height: 88px;
+    margin-bottom: 8px;
+  }
+  .seller-profile-summary .button-row {
+    margin: 12px 0;
+  }
+  .seller-shell .seller-profile-summary .sales-summary {
+    margin: 10px 0;
+    padding: 6px 10px;
+  }
+  .seller-shell .seller-profile-summary .quick-actions {
+    margin-top: 12px;
+    gap: 18px;
+  }
+  .seller-shell .product-tile {
+    aspect-ratio: 3/4;
+  }
+}

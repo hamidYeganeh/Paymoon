@@ -1,12 +1,4 @@
-import { EmptyState } from "@paymoon/ui";
+import { CommercePage } from "@paymoon/ui";
 export default function Page() {
-  return (
-    <>
-      <h1>فروشندگان</h1>
-      <EmptyState
-        title="فروشندگان"
-        description="بررسی و تأیید فروشندگان هنوز فعال نیست."
-      />
-    </>
-  );
+  return <CommercePage app="admin" page="merchants" />;
 }

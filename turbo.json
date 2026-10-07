@@ -6,7 +6,7 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      "env": ["NEXT_PUBLIC_*", "CAPACITOR_BUILD"]
+      "env": ["NEXT_PUBLIC_*", "CAPACITOR_BUILD", "COMMERCE_API_PROXY_URL"]
     },
     "lint": {
       "outputs": []
@@ -25,7 +25,13 @@
       "dependsOn": ["^build"],
       "cache": false,
       "persistent": true,
-      "env": ["COMMERCE_*", "LOG_LEVEL", "INSTAGRAM_*", "NEXT_PUBLIC_*"]
+      "env": [
+        "COMMERCE_*",
+        "LOG_LEVEL",
+        "INSTAGRAM_*",
+        "NEXT_PUBLIC_*",
+        "COMMERCE_API_PROXY_URL"
+      ]
     },
     "android:sync": {
       "dependsOn": ["^build"],

@@ -1,3 +1,4 @@
+import { IdentityModule } from "../identity/identity.module";
 import { Body, Delete, Param, Res } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody } from "@nestjs/swagger";
 import { z } from "zod";
@@ -85,6 +86,12 @@ export class InstagramConnectionController {
   ) {
     return this.instagram.begin(req, reply, org);
   }
+  @Post("mobile-authorize") mobile(
+    @Req() req: FastifyRequest,
+    @Param("org") org: string,
+  ) {
+    return this.instagram.mobileAuthorize(req, org);
+  }
   @Post("refresh") refresh(
     @Req() req: FastifyRequest,
     @Param("org") org: string,
@@ -152,12 +159,18 @@ export class InstagramConnectionController {
 @Controller("v1/instagram/oauth")
 export class InstagramOAuthController {
   constructor(private readonly instagram: InstagramService) {}
-  @Get("callback") callback(
+  @Get("launch") launch(
+    @Res() reply: FastifyReply,
+    @Query("ticket") ticket: string,
+  ) {
+    return this.instagram.launch(reply, ticket);
+  }
+  @Get("callback") async callback(
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
     @Query() query: unknown,
   ) {
-    return this.instagram.callback(
+    const result = await this.instagram.callback(
       req,
       reply,
       z
@@ -168,10 +181,18 @@ export class InstagramOAuthController {
         })
         .parse(query),
     );
+    if (req.headers.accept?.includes("text/html")) {
+      return reply
+        .type("text/html; charset=utf-8")
+        .send(
+          '<!doctype html><html lang="fa" dir="rtl"><meta name="viewport" content="width=device-width, initial-scale=1"><title>اتصال پی‌مون</title><body><h1>اینستاگرام متصل شد</h1><p>به اپ پی‌مون برگردید و صفحهٔ اینستاگرام را تازه کنید. حالا می‌توانید پست‌های فروشگاهتان را دریافت کنید.</p></body></html>',
+        );
+    }
+    return result;
   }
 }
 @Module({
-  imports: [OrganizationsModule],
+  imports: [OrganizationsModule, IdentityModule],
   controllers: [
     InstagramController,
     InstagramConnectionController,

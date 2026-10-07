@@ -7,10 +7,12 @@ import {
   Module,
   Post,
   Req,
+  Res,
+  ForbiddenException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
-import type { FastifyRequest } from "fastify";
+import type { FastifyRequest, FastifyReply } from "fastify";
 import {
   hashPassword,
   hashToken,
@@ -23,10 +25,39 @@ import { Store } from "../../platform";
 @Injectable()
 export class IdentityService {
   constructor(private readonly store: Store) {}
-  async actor(req: FastifyRequest) {
-    const token = req.headers.authorization?.match(
+  assertWebOrigin(req: FastifyRequest) {
+    if (
+      req.headers["x-paymoon-client"] === "web" &&
+      !this.store.config.COMMERCE_CORS_ORIGINS.split(",")
+        .map((v) => v.trim())
+        .includes(String(req.headers.origin ?? ""))
+    )
+      throw new ForbiddenException("Invalid request origin");
+  }
+  token(req: FastifyRequest) {
+    const bearer = req.headers.authorization?.match(
       /^Bearer ([A-Za-z0-9_-]{43})$/,
     )?.[1];
+    if (bearer) return bearer;
+    const cookie = req.headers.cookie
+      ?.split(";")
+      .map((v) => v.trim())
+      .find((v) => v.startsWith("paymoon_session="))
+      ?.slice(16);
+    if (cookie && !["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+      const origins = this.store.config.COMMERCE_CORS_ORIGINS.split(",").map(
+        (v) => v.trim(),
+      );
+      if (
+        req.headers["x-paymoon-client"] !== "web" ||
+        !origins.includes(String(req.headers.origin ?? ""))
+      )
+        throw new ForbiddenException("Invalid request origin");
+    }
+    return cookie?.match(/^[A-Za-z0-9_-]{43}$/)?.[0];
+  }
+  async actor(req: FastifyRequest) {
+    const token = this.token(req);
     if (!token) throw new UnauthorizedException();
     const result = await this.store.db.pool.query(
       "SELECT u.id,u.email FROM commerce.sessions s JOIN commerce.users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now()",
@@ -73,7 +104,7 @@ export class IdentityService {
     await this.actor(req);
     await this.store.db.pool.query(
       "DELETE FROM commerce.sessions WHERE token_hash=$1",
-      [hashToken(req.headers.authorization!.slice(7))],
+      [hashToken(this.token(req)!)],
     );
     return { ok: true };
   }
@@ -92,17 +123,50 @@ const authBody: import("@nestjs/swagger").ApiBodyOptions = {
 @Controller("v1/identity")
 export class IdentityController {
   constructor(private readonly identity: IdentityService) {}
-  @Post("register") @ApiBody(authBody) register(@Body() body: unknown) {
-    return this.identity.login(body, true);
+  private session(
+    reply: FastifyReply,
+    req: FastifyRequest,
+    result: Awaited<ReturnType<IdentityService["login"]>>,
+  ) {
+    reply.header("Cache-Control", "no-store");
+    if (req.headers["x-paymoon-client"] === "web") {
+      reply.header(
+        "Set-Cookie",
+        `paymoon_session=${result.token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400${req.protocol === "https" || process.env.NODE_ENV === "production" ? "; Secure" : ""}`,
+      );
+      return { user: result.user, expiresIn: result.expiresIn };
+    }
+    return result;
   }
-  @Post("login") @ApiBody(authBody) login(@Body() body: unknown) {
-    return this.identity.login(body);
+  @Post("register") @ApiBody(authBody) async register(
+    @Body() body: unknown,
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    this.identity.assertWebOrigin(req);
+    return this.session(reply, req, await this.identity.login(body, true));
+  }
+  @Post("login") @ApiBody(authBody) async login(
+    @Body() body: unknown,
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    this.identity.assertWebOrigin(req);
+    return this.session(reply, req, await this.identity.login(body));
   }
   @Get("me") @ApiBearerAuth() me(@Req() req: FastifyRequest) {
     return this.identity.actor(req);
   }
-  @Delete("session") @ApiBearerAuth() logout(@Req() req: FastifyRequest) {
-    return this.identity.logout(req);
+  @Delete("session") @ApiBearerAuth() async logout(
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    const result = await this.identity.logout(req);
+    reply.header(
+      "Set-Cookie",
+      "paymoon_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0",
+    );
+    return result;
   }
 }
 @Module({

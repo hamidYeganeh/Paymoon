@@ -1,4 +1,9 @@
 import "reflect-metadata";
+import { SocialModule } from "./modules/social/social.module";
+import { randomUUID } from "node:crypto";
+import { ExperienceModule } from "./modules/experience/experience.module";
+import { CatalogOperationsModule } from "./modules/catalog/catalog-operations.module";
+import { MediaModule } from "./modules/media/media.module";
 import {
   ArgumentsHost,
   Catch,
@@ -57,6 +62,10 @@ class HealthController {
 @Module({
   imports: [
     PlatformModule,
+    ExperienceModule,
+    SocialModule,
+    CatalogOperationsModule,
+    MediaModule,
     IdentityModule,
     OrganizationsModule,
     MerchantsModule,
@@ -76,16 +85,19 @@ class Errors implements ExceptionFilter {
   catch(error: unknown, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<FastifyReply>();
     const code = (error as { code?: string })?.code;
+    const fastifyStatus = (error as { statusCode?: number })?.statusCode;
     const status =
-      error instanceof HttpException
-        ? error.getStatus()
-        : error instanceof ZodError
-          ? 400
-          : error instanceof IdempotencyConflict || code === "23505"
-            ? 409
-            : code === "23503" || code === "23514"
-              ? 422
-              : 500;
+      fastifyStatus === 429 || fastifyStatus === 413
+        ? fastifyStatus
+        : error instanceof HttpException
+          ? error.getStatus()
+          : error instanceof ZodError
+            ? 400
+            : error instanceof IdempotencyConflict || code === "23505"
+              ? 409
+              : code === "23503" || code === "23514"
+                ? 422
+                : 500;
     return response.status(status).send({
       statusCode: status,
       message:
@@ -107,7 +119,10 @@ class Errors implements ExceptionFilter {
 export async function createApp() {
   const config = readConfig();
   const logger = createLogger("commerce-api", config.LOG_LEVEL);
-  const adapter = new FastifyAdapter({ bodyLimit: 102400, trustProxy: false });
+  const adapter = new FastifyAdapter({
+    bodyLimit: 4_100_000,
+    trustProxy: false,
+  });
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     adapter,
@@ -139,17 +154,23 @@ export async function createApp() {
   await app.register(helmet);
   await app.register(rateLimit, {
     max: 60,
+    nameSpace:
+      config.NODE_ENV === "test"
+        ? "paymoon-test-rate:" + randomUUID() + ":"
+        : "paymoon-api-rate:",
     timeWindow: "1 minute",
     redis: app.get(Store).redis,
   });
   app.enableCors({
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     origin: config.COMMERCE_CORS_ORIGINS.split(",").map((v) => v.trim()),
     allowedHeaders: [
       "Content-Type",
       "Authorization",
       "Idempotency-Key",
       "traceparent",
+      "X-Paymoon-Client",
     ],
     exposedHeaders: ["x-request-id", "traceparent"],
   });

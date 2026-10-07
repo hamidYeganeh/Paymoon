@@ -1,9 +1,4 @@
-import { EmptyState } from "@paymoon/ui";
+import { CommercePage } from "@paymoon/ui";
 export default function Page() {
-  return (
-    <EmptyState
-      title="ذخیره‌های شما"
-      description="محصولات ذخیره‌شده اینجا نمایش داده می‌شوند. این قابلیت هنوز فعال نیست."
-    />
-  );
+  return <CommercePage app="marketplace" page="saved" />;
 }

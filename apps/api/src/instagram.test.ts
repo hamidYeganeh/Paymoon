@@ -222,6 +222,68 @@ test(
       const status = await request("GET", base, auth);
       assert.ok(!status.body.includes("ciphertext"));
       assert.ok(!status.body.includes(f.accessToken));
+      const imported = await request(
+        "POST",
+        base + "/import",
+        { ...auth, "idempotency-key": "instagram-import-replay" },
+        { mediaIds: ["123456789"] },
+      );
+      assert.equal(imported.statusCode, 201);
+      const importedAgain = await request(
+        "POST",
+        base + "/import",
+        { ...auth, "idempotency-key": "instagram-import-replay" },
+        { mediaIds: ["123456789"] },
+      );
+      assert.deepEqual(importedAgain.json(), imported.json());
+      const product = (
+        await store.db.pool.query(
+          "SELECT * FROM commerce.products WHERE organization_id=$1 AND source_media_id=$2",
+          [org, "123456789"],
+        )
+      ).rows[0];
+      assert.equal(product.status, "draft");
+      assert.equal(product.title, "A product");
+      const stock = (
+        await store.db.pool.query(
+          "SELECT v.price_minor,i.available FROM commerce.variants v JOIN commerce.inventory i ON i.variant_id=v.id WHERE product_id=$1",
+          [product.id],
+        )
+      ).rows[0];
+      assert.equal(stock.price_minor, "0");
+      assert.equal(stock.available, 0);
+      const mobile = await request("POST", base + "/mobile-authorize", auth);
+      assert.equal(mobile.statusCode, 201);
+      assert.ok(!mobile.body.includes(user.token));
+      const launchPath =
+        new URL(mobile.json().launchUrl).pathname +
+        new URL(mobile.json().launchUrl).search;
+      const launch = await request("GET", launchPath);
+      assert.equal(launch.statusCode, 302);
+      assert.match(String(launch.headers["set-cookie"]), /HttpOnly; Secure/);
+      assert.equal(
+        new URL(String(launch.headers.location)).hostname,
+        "www.instagram.com",
+      );
+      assert.equal((await request("GET", launchPath)).statusCode, 403);
+      const launchedState = new URL(
+        String(launch.headers.location),
+      ).searchParams.get("state");
+      const launchedCookie = String(launch.headers["set-cookie"]).split(
+        ";",
+      )[0]!;
+      assert.equal(
+        (
+          await request(
+            "GET",
+            "/v1/instagram/oauth/callback?state=" +
+              launchedState +
+              "&error=access_denied",
+            { cookie: launchedCookie },
+          )
+        ).statusCode,
+        400,
+      );
       const stale = await request("POST", base + "/authorize", auth);
       const staleState = new URL(
         stale.json().authorizationUrl,

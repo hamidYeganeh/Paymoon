@@ -72,3 +72,30 @@ test("traceparent validates input and creates a new span", () => {
     "0".repeat(32),
   );
 });
+
+test("staging accepts provider env aliases, isolates sandbox, and production forbids it", () => {
+  const env = {
+    NODE_ENV: "production",
+    COMMERCE_ENVIRONMENT: "staging",
+    DATABASE_URL: "postgresql://test:test@db.example/paymoon_staging",
+    REDIS_URL: "rediss://default:test@redis.example:6380",
+    COMMERCE_API_PUBLIC_URL: "https://api.example.com",
+    COMMERCE_PAYMENT_MODE: "sandbox",
+  };
+  const config = readConfig(env);
+  assert.equal(config.COMMERCE_DATABASE_URL, env.DATABASE_URL);
+  assert.equal(config.COMMERCE_ENVIRONMENT, "staging");
+  assert.throws(() =>
+    readConfig({ ...env, COMMERCE_ENVIRONMENT: "production" }),
+  );
+  assert.throws(() =>
+    readConfig({
+      ...env,
+      DATABASE_URL: "postgresql://test:test@db.example/paymoon_production",
+    }),
+  );
+  assert.throws(() =>
+    readConfig({ ...env, REDIS_URL: "https://redis.example.com" }),
+  );
+  assert.throws(() => readConfig({ ...env, VERCEL: "1" }));
+});

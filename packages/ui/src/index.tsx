@@ -1,3 +1,4 @@
+import { AppLink } from "./motion";
 import type { ReactNode } from "react";
 export function Shell({
   title,
@@ -17,9 +18,9 @@ export function Shell({
       <div className="workspace">
         <nav aria-label="منوی اصلی">
           {links.map((link) => (
-            <a key={link.href} href={link.href}>
+            <AppLink key={link.href} href={link.href}>
               {link.label}
-            </a>
+            </AppLink>
           ))}
         </nav>
         <main>{children}</main>
@@ -50,3 +51,8 @@ export {
   StoryStrip,
   DesignPreview,
 } from "./social";
+
+export { CommerceProvider, useCommerce } from "./commerce/client";
+export { CommercePage } from "./commerce/pages";
+
+export { MotionProvider, RouteView, useAppearance } from "./motion";

@@ -117,10 +117,32 @@ export class MembershipsController {
     await this.organizations.require(req, org, "organization:manage");
     return (
       await this.store.db.pool.query(
-        "SELECT user_id,role FROM commerce.memberships WHERE organization_id=$1 ORDER BY user_id LIMIT 100",
+        "SELECT m.user_id,m.role,u.email FROM commerce.memberships m JOIN commerce.users u ON u.id=m.user_id WHERE m.organization_id=$1 ORDER BY m.user_id LIMIT 100",
         [org],
       )
     ).rows;
+  }
+  @Post("by-email") async byEmail(
+    @Req() req: FastifyRequest,
+    @Param("org") org: string,
+    @Body() body: unknown,
+  ) {
+    const input = z
+      .object({
+        email: z.email().transform((v) => v.toLowerCase()),
+        role: z.enum(["admin", "staff", "viewer"]),
+      })
+      .strict()
+      .parse(body);
+    await this.organizations.require(req, org, "organization:manage");
+    const u = (
+      await this.store.db.pool.query(
+        "SELECT id FROM commerce.users WHERE email=$1",
+        [input.email],
+      )
+    ).rows[0];
+    if (!u) throw new ConflictException("User must register first");
+    return this.assign(req, org, u.id, { role: input.role });
   }
   @Put(":user")
   @ApiBody({

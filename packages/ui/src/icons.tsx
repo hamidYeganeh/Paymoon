@@ -1,0 +1,85 @@
+"use client";
+import {
+  House,
+  MagnifyingGlass,
+  SquaresFour,
+  ShoppingBag,
+  UserCircle,
+  Plus,
+  Heart,
+  List,
+  PaperPlaneTilt,
+  BookmarkSimple,
+  ChatCircle,
+  Camera,
+  FilmSlate,
+  CaretRight,
+  CaretDown,
+  Tag,
+  DotsThree,
+  Compass,
+  Package,
+  Users,
+  ChartLine,
+  CheckCircle,
+  Moon,
+  Sun,
+  Monitor,
+  ArrowLeft,
+  ArrowSquareOut,
+  InstagramLogo,
+  WarningCircle,
+  Copy,
+  X,
+  SlidersHorizontal,
+  Stack,
+} from "@phosphor-icons/react";
+const icons = {
+  home: House,
+  search: MagnifyingGlass,
+  grid: SquaresFour,
+  bag: ShoppingBag,
+  user: UserCircle,
+  plus: Plus,
+  heart: Heart,
+  menu: List,
+  send: PaperPlaneTilt,
+  bookmark: BookmarkSimple,
+  comment: ChatCircle,
+  camera: Camera,
+  reels: FilmSlate,
+  chevron: CaretRight,
+  down: CaretDown,
+  tag: Tag,
+  more: DotsThree,
+  explore: Compass,
+  inventory: Package,
+  team: Users,
+  ledger: ChartLine,
+  check: CheckCircle,
+  moon: Moon,
+  sun: Sun,
+  monitor: Monitor,
+  back: ArrowLeft,
+  external: ArrowSquareOut,
+  instagram: InstagramLogo,
+  warning: WarningCircle,
+  copy: Copy,
+  close: X,
+  filter: SlidersHorizontal,
+  stack: Stack,
+};
+export function SocialIcon({
+  name,
+  filled = false,
+  size = 24,
+}: {
+  name: string;
+  filled?: boolean;
+  size?: number;
+}) {
+  const Icon = icons[name as keyof typeof icons] ?? SquaresFour;
+  return (
+    <Icon size={size} weight={filled ? "fill" : "regular"} aria-hidden="true" />
+  );
+}

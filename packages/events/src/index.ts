@@ -109,3 +109,45 @@ export async function routeInstagramInbox(c: PoolClient) {
   }
   return rows.rowCount;
 }
+
+export async function expireOrders(c: PoolClient) {
+  const expired = (
+    await c.query(
+      "SELECT id,organization_id,buyer_id FROM commerce.orders WHERE status='pending_payment' AND expires_at<now() ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 25",
+    )
+  ).rows;
+  for (const o of expired) {
+    const items = (
+      await c.query(
+        "SELECT variant_id,quantity FROM commerce.order_items WHERE order_id=$1 ORDER BY variant_id",
+        [o.id],
+      )
+    ).rows;
+    for (const item of items) {
+      const updated = await c.query(
+        "UPDATE commerce.inventory SET available=available+$2,reserved=reserved-$2 WHERE variant_id=$1 AND reserved>=$2",
+        [item.variant_id, item.quantity],
+      );
+      if (!updated.rowCount)
+        throw new Error("Order stock reservation invariant failed");
+      await c.query(
+        "INSERT INTO commerce.stock_movements(variant_id,kind,quantity,actor_id) VALUES($1,'release',$2,$3)",
+        [item.variant_id, item.quantity, o.buyer_id],
+      );
+    }
+    await c.query(
+      "UPDATE commerce.orders SET status='cancelled',version=version+1,updated_at=now() WHERE id=$1",
+      [o.id],
+    );
+    await c.query(
+      "INSERT INTO commerce.user_notifications(user_id,order_id,kind) VALUES($1,$2,'order.cancelled')",
+      [o.buyer_id, o.id],
+    );
+    await emit(c, "order.transitioned", {
+      organizationId: o.organization_id,
+      orderId: o.id,
+      status: "cancelled",
+    });
+  }
+  return expired.length;
+}

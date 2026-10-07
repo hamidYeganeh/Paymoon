@@ -58,6 +58,8 @@ export class InventoryController {
     @Body() body: unknown,
   ) {
     const input = movementInput.parse(body);
+    if (input.kind !== "receive")
+      throw new ConflictException("Order workflow owns stock reservations");
     return transaction(this.store.db.pool, async (c) => {
       const actor = await this.organizations.require(
         req,

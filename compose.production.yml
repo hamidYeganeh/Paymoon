@@ -1,0 +1,45 @@
+services:
+  migrate:
+    build: .
+    env_file: .env.production
+    command: ["node", "packages/db/dist/migrate.js"]
+    restart: "no"
+  api:
+    build: .
+    env_file: .env.production
+    command: ["node", "apps/api/dist/main.js"]
+    ports: ["4000:4000"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:4000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  worker:
+    build: .
+    env_file: .env.production
+    command: ["node", "apps/worker/dist/main.js"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:4001/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -29,7 +29,7 @@ export class CatalogController {
     await this.organizations.require(req, org, "read");
     return (
       await this.store.db.pool.query(
-        "SELECT * FROM commerce.products WHERE organization_id=$1 ORDER BY created_at DESC LIMIT 100",
+        "SELECT p.*,(SELECT jsonb_agg(jsonb_build_object('id',v.id,'sku',v.sku,'price_minor',v.price_minor::text,'attributes',v.attributes,'available',i.available)) FROM commerce.variants v JOIN commerce.inventory i ON i.variant_id=v.id WHERE v.product_id=p.id) AS variants FROM commerce.products p WHERE organization_id=$1 ORDER BY created_at DESC LIMIT 100",
         [org],
       )
     ).rows;

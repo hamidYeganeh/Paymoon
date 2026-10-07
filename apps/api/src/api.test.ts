@@ -161,7 +161,7 @@ test(
           "reserve-key-2",
         ),
       ]);
-      assert.deepEqual([one.status, two.status].sort(), [201, 409]);
+      assert.deepEqual([one.status, two.status].sort(), [409, 409]);
       assert.equal(
         (
           await request(

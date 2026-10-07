@@ -2,7 +2,12 @@ import Redis from "ioredis";
 import { createServer } from "node:http";
 import { readConfig, redisConnection } from "@paymoon/config";
 import { database, transaction } from "@paymoon/db";
-import { publishBatch, QUEUE, routeInstagramInbox } from "@paymoon/events";
+import {
+  publishBatch,
+  QUEUE,
+  routeInstagramInbox,
+  expireOrders,
+} from "@paymoon/events";
 import { createLogger } from "@paymoon/logger";
 import { Queue, Worker } from "bullmq";
 const config = readConfig(),
@@ -20,6 +25,7 @@ const topics = new Set([
   "instagram.webhook.received",
   "merchant.created",
   "product.created",
+  "product.commented",
   "inventory.changed",
   "order.transitioned",
 ]);
@@ -59,9 +65,23 @@ worker.on("error", () => logger.error("worker connection error"));
 let stopping = false;
 let active: Promise<unknown> | undefined;
 let lastSuccess = 0;
+let lastRetention = 0;
 function poll() {
   if (stopping || active) return;
   active = transaction(pool, async (c) => {
+    await expireOrders(c);
+    if (Date.now() - lastRetention > 3600000) {
+      await c.query(
+        "DELETE FROM commerce.analytics_events WHERE created_at<now()-interval '90 days'",
+      );
+      await c.query(
+        "DELETE FROM commerce.instagram_launch_tickets WHERE expires_at<now()",
+      );
+      await c.query(
+        "DELETE FROM commerce.instagram_oauth_states WHERE expires_at<now()",
+      );
+      lastRetention = Date.now();
+    }
     await routeInstagramInbox(c);
     return publishBatch(c, queue);
   })

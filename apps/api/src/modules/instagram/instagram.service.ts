@@ -12,6 +12,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { can, hashToken } from "@paymoon/auth";
 import { transaction, type PoolClient } from "@paymoon/db";
 import { emit } from "@paymoon/events";
+import { IdentityService } from "../identity/identity.module";
 import { Store } from "../../platform";
 import { OrganizationsService } from "../organizations/organizations.module";
 import { MetaApiError, MetaInstagramAdapter } from "./meta.adapter";
@@ -39,6 +40,7 @@ export class InstagramService {
   constructor(
     private readonly store: Store,
     private readonly organizations: OrganizationsService,
+    private readonly identity: IdentityService,
   ) {}
   private configured() {
     const c = this.store.config;
@@ -98,7 +100,7 @@ export class InstagramService {
           digest(browser),
           org,
           actor.id,
-          hashToken(req.headers.authorization!.slice(7)),
+          hashToken(this.identity.token(req)!),
           config.scopes,
         ],
       );
@@ -113,6 +115,58 @@ export class InstagramService {
         state,
       ),
     };
+  }
+  async mobileAuthorize(req: FastifyRequest, org: string) {
+    this.configured();
+    const actor = await this.organizations.require(req, org, "merchant:write");
+    const ticket = randomBytes(32).toString("base64url");
+    await this.store.db.pool.query(
+      "INSERT INTO commerce.instagram_launch_tickets(digest,organization_id,user_id,session_hash,expires_at) VALUES($1,$2,$3,$4,now()+interval '5 minutes')",
+      [digest(ticket), org, actor.id, hashToken(this.identity.token(req)!)],
+    );
+    return {
+      launchUrl:
+        this.store.config.COMMERCE_API_PUBLIC_URL.replace(/\/$/, "") +
+        "/v1/instagram/oauth/launch?ticket=" +
+        ticket,
+    };
+  }
+  async launch(reply: FastifyReply, ticket: string) {
+    if (!/^[A-Za-z0-9_-]{43}$/.test(ticket)) throw new ForbiddenException();
+    const config = this.configured(),
+      state = randomBytes(32).toString("base64url"),
+      browser = randomBytes(32).toString("base64url");
+    await transaction(this.store.db.pool, async (c) => {
+      const row = (
+        await c.query(
+          "DELETE FROM commerce.instagram_launch_tickets WHERE digest=$1 AND expires_at>now() RETURNING *",
+          [digest(ticket)],
+        )
+      ).rows[0] as OAuthState | undefined;
+      if (!row) throw new ForbiddenException("Launch link expired or used");
+      await this.stillAuthorized(c, row);
+      await c.query(
+        "INSERT INTO commerce.instagram_oauth_states(state_hash,browser_hash,organization_id,user_id,session_hash,scopes,expires_at) VALUES($1,$2,$3,$4,$5,$6,now()+interval '10 minutes')",
+        [
+          digest(state),
+          digest(browser),
+          row.organization_id,
+          row.user_id,
+          row.session_hash,
+          config.scopes,
+        ],
+      );
+    });
+    reply
+      .header("Cache-Control", "no-store")
+      .header("Referrer-Policy", "no-referrer")
+      .header(
+        "Set-Cookie",
+        `${COOKIE}=${browser}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`,
+      );
+    return reply
+      .code(302)
+      .redirect(new MetaInstagramAdapter(config).authorizationUrl(state));
   }
   private async stillAuthorized(c: PoolClient, state: OAuthState) {
     const row = (

@@ -52,3 +52,10 @@ yarn-error.log*
 **/android/capacitor-cordova-android-plugins/
 *.jks
 *.keystore
+
+var/media/
+
+.env.production
+
+.env.staging
+.env.staging.local

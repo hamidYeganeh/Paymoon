@@ -1,0 +1,50 @@
+version: 1
+destination: local-postgresql
+identity:
+  {
+    user_id: commerce.users.id,
+    group_id: commerce.organizations.id,
+    traits: [],
+  }
+privacy:
+  forbidden:
+    [email, phone, address, password, token, caption, message, search_query]
+  anonymous_tracking: false
+  third_party_transmission: false
+  retention_days: 90
+events:
+  - {
+      name: instagram.imported,
+      source: server,
+      trigger: committed draft import,
+      properties: [count],
+      goal: seller_activation,
+    }
+  - {
+      name: product.published,
+      source: server,
+      trigger: transition to published,
+      properties: [productId],
+      goal: seller_activation,
+    }
+  - {
+      name: order.created,
+      source: server,
+      trigger: committed checkout reservation,
+      properties: [orderId],
+      goal: purchase_intent,
+    }
+  - {
+      name: order.paid,
+      source: server,
+      trigger: committed sandbox journal,
+      properties: [orderId, sandbox],
+      goal: test_payment_conversion,
+    }
+  - {
+      name: order.completed,
+      source: server,
+      trigger: confirmed receipt,
+      properties: [orderId],
+      goal: primary_value,
+    }

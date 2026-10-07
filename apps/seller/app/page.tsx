@@ -1,4 +1,4 @@
-import { ProfileView } from "@paymoon/ui";
+import { CommercePage } from "@paymoon/ui";
 export default function Page() {
-  return <ProfileView seller />;
+  return <CommercePage app="seller" page="home" />;
 }
