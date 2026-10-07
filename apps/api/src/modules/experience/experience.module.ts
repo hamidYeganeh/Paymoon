@@ -1,3 +1,4 @@
+import { redeemCoupon } from "../growth/coupons";
 import {
   Body,
   BadRequestException,
@@ -57,6 +58,15 @@ export class MarketplaceController {
     const q = z
       .object({
         q: z.string().max(100).optional(),
+        inStock: z.enum(["true", "false"]).optional(),
+        minPrice: z
+          .string()
+          .regex(/^\d{1,12}$/)
+          .optional(),
+        maxPrice: z
+          .string()
+          .regex(/^\d{1,12}$/)
+          .optional(),
         category: z.string().max(80).optional(),
         merchant: z.string().max(80).optional(),
         sort: z.enum(["newest", "price_asc", "price_desc"]).optional(),
@@ -65,14 +75,22 @@ export class MarketplaceController {
       .parse(raw);
     const sort =
       q.sort === "price_asc"
-        ? "price_minor::numeric ASC,p.id"
+        ? "price_minor::numeric ASC,id"
         : q.sort === "price_desc"
-          ? "price_minor::numeric DESC,p.id"
+          ? "price_minor::numeric DESC,id"
           : "created_at DESC,id";
     return (
       await this.store.db.pool.query(
-        `SELECT * FROM (${publicSelect} AND ($1::text IS NULL OR p.title ILIKE '%'||$1||'%' OR p.description ILIKE '%'||$1||'%') AND ($2::text IS NULL OR p.category_id IN(SELECT id FROM commerce.categories WHERE slug=$2)) AND ($3::text IS NULL OR o.slug=$3)) t ORDER BY ${sort} LIMIT 25 OFFSET $4`,
-        [q.q ?? null, q.category ?? null, q.merchant ?? null, q.offset],
+        `SELECT * FROM (${publicSelect} AND ($1::text IS NULL OR p.title ILIKE '%'||$1||'%' OR p.description ILIKE '%'||$1||'%') AND ($2::text IS NULL OR p.category_id IN(SELECT id FROM commerce.categories WHERE slug=$2)) AND ($3::text IS NULL OR o.slug=$3)) t WHERE ($5::boolean=false OR EXISTS(SELECT 1 FROM commerce.variants v JOIN commerce.inventory i ON i.variant_id=v.id WHERE v.product_id=t.id AND i.available>0 AND v.price_minor>0)) AND ($6::numeric IS NULL OR t.price_minor::numeric>=$6) AND ($7::numeric IS NULL OR t.price_minor::numeric<=$7) ORDER BY ${sort} LIMIT 25 OFFSET $4`,
+        [
+          q.q ?? null,
+          q.category ?? null,
+          q.merchant ?? null,
+          q.offset,
+          q.inStock === "true",
+          q.minPrice ? (BigInt(q.minPrice) * 10n).toString() : null,
+          q.maxPrice ? (BigInt(q.maxPrice) * 10n).toString() : null,
+        ],
       )
     ).rows;
   }
@@ -268,6 +286,13 @@ export class CustomerController {
       type: "object",
       required: ["addressId", "items"],
       properties: {
+        couponCode: {
+          type: "string",
+          minLength: 3,
+          maxLength: 32,
+          description:
+            "Optional coupon code; discount is calculated in the checkout transaction.",
+        },
         addressId: { type: "string", format: "uuid" },
         items: {
           type: "array",
@@ -291,6 +316,12 @@ export class CustomerController {
     const input = z
       .object({
         addressId: uuid,
+        couponCode: z
+          .string()
+          .trim()
+          .toUpperCase()
+          .regex(/^[A-Z0-9_-]{3,32}$/)
+          .optional(),
         items: z
           .array(
             z
@@ -354,13 +385,21 @@ export class CustomerController {
           let total = BigInt(variants[0].shipping_fee_minor);
           for (const v of variants)
             total += BigInt(v.price_minor) * BigInt(merged.get(v.id)!);
+          const { discount, coupon } = await redeemCoupon(
+            c,
+            org,
+            u.id,
+            input.couponCode,
+            total - BigInt(variants[0].shipping_fee_minor),
+          );
+          total -= discount;
           if (total > 9223372036854775807n)
             throw new BadRequestException(
               "Order amount exceeds supported range",
             );
           const x = (
             await c.query(
-              `INSERT INTO commerce.orders(organization_id,buyer_id,status,amount_minor,shipping_fee_minor,shipping_address,expires_at) VALUES($1,$2,'pending_payment',$3,$4,$5,now()+interval '30 minutes') RETURNING *`,
+              `INSERT INTO commerce.orders(organization_id,buyer_id,status,amount_minor,shipping_fee_minor,shipping_address,expires_at,discount_minor,coupon_code) VALUES($1,$2,'pending_payment',$3,$4,$5,now()+interval '30 minutes',$6,$7) RETURNING *`,
               [
                 org,
                 u.id,
@@ -372,9 +411,16 @@ export class CustomerController {
                   id: undefined,
                   created_at: undefined,
                 }),
+                discount.toString(),
+                coupon?.code ?? null,
               ],
             )
           ).rows[0];
+          if (coupon)
+            await c.query(
+              "INSERT INTO commerce.coupon_redemptions(coupon_id,order_id,buyer_id,discount_minor) VALUES($1,$2,$3,$4)",
+              [coupon.id, x.id, u.id, discount.toString()],
+            );
           for (const v of variants) {
             await stock(c, v.id, "reserve", merged.get(v.id)!, u.id);
             await c.query(

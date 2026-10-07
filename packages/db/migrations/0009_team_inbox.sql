@@ -1,0 +1,5 @@
+CREATE TABLE commerce.conversations(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),organization_id uuid NOT NULL REFERENCES commerce.organizations(id),buyer_id uuid NOT NULL REFERENCES commerce.users(id),status text NOT NULL DEFAULT 'open' CHECK(status IN ('open','pending','resolved')),assigned_to uuid REFERENCES commerce.users(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),UNIQUE(organization_id,buyer_id));
+CREATE TABLE commerce.conversation_messages(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),conversation_id uuid NOT NULL REFERENCES commerce.conversations(id),author_id uuid NOT NULL REFERENCES commerce.users(id),body text NOT NULL CHECK(length(body) BETWEEN 1 AND 2000),created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX conversation_org_updated ON commerce.conversations(organization_id,updated_at DESC);
+CREATE INDEX conversation_buyer_updated ON commerce.conversations(buyer_id,updated_at DESC);
+CREATE INDEX messages_conversation_time ON commerce.conversation_messages(conversation_id,created_at DESC,id);

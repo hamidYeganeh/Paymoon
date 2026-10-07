@@ -1,4 +1,5 @@
 "use client";
+import { ProductAlertControls } from "./alerts";
 import { useRouter } from "next/navigation";
 import { AppLink } from "../motion";
 import { useState, useRef, useEffect } from "react";
@@ -98,6 +99,9 @@ export function AuthPage({
 }
 export function Browse({ search = false }: { search?: boolean }) {
   const [q, setQ] = useState(""),
+    [inStock, setInStock] = useState(false),
+    [minimum, setMinimum] = useState(""),
+    [maximum, setMaximum] = useState(""),
     [sort, setSort] = useState("newest"),
     [category, setCategory] = useState(""),
     [offset, setOffset] = useState(0),
@@ -151,13 +155,52 @@ export function Browse({ search = false }: { search?: boolean }) {
               <option value="price_desc">گران‌ترین</option>
             </select>
           </div>
+          <div className="filter-row">
+            <label>
+              از قیمت (تومان)
+              <input
+                type="number"
+                min="0"
+                value={minimum}
+                onChange={(e) => {
+                  setMinimum(e.target.value);
+                  setOffset(0);
+                }}
+              />
+            </label>
+            <label>
+              تا قیمت (تومان)
+              <input
+                type="number"
+                min="0"
+                value={maximum}
+                onChange={(e) => {
+                  setMaximum(e.target.value);
+                  setOffset(0);
+                }}
+              />
+            </label>
+            <label className="check-filter">
+              <input
+                type="checkbox"
+                checked={inStock}
+                onChange={(e) => {
+                  setInStock(e.target.checked);
+                  setOffset(0);
+                }}
+              />
+              فقط موجود
+            </label>
+            <AppLink href="/shops/">کشف فروشگاه‌ها</AppLink>
+            <AppLink href="/link-search/">جست‌وجوی لینک پست</AppLink>
+          </div>
         </Panel>
       )}
       {!search && <ShopSuggestions tray />}
       <ProductList
         onCount={setCount}
         grid={search}
-        path={`/v1/marketplace/products?q=${encodeURIComponent(q)}&sort=${sort}${category ? "&category=" + category : ""}&offset=${offset}`}
+        path={`/v1/marketplace/products?q=${encodeURIComponent(q)}&sort=${sort}${category ? "&category=" + category : ""}&offset=${offset}&inStock=${inStock}${minimum ? "&minPrice=" + minimum : ""}${maximum ? "&maxPrice=" + maximum : ""}`}
       />
       <div className="pagination">
         <button
@@ -205,6 +248,9 @@ export function ProductDetail() {
             {p.display_name}
           </AppLink>
           <h2>{p.title}</h2>
+          <AppLink className="text-link" href={"/similar/?id=" + p.id}>
+            گزینه‌های هم‌دسته و هزینهٔ ارسال
+          </AppLink>
           <p className="preserve-lines">{p.description}</p>
           <label className="standalone-label">
             انتخاب مدل
@@ -267,6 +313,7 @@ export function ProductDetail() {
           <p role="status">
             {message} <AppLink href="/cart/">دیدن سبد</AppLink>
           </p>
+          <ProductAlertControls productId={p.id} />
           <Action run={() => c.request("/v1/me/saved/" + p.id, "PUT")}>
             ذخیرهٔ محصول
           </Action>
@@ -304,6 +351,12 @@ export function ShopPage() {
               </div>
             </div>
             <p>{r.data.bio}</p>
+            <AppLink
+              className="text-link"
+              href={"/messages/?merchant=" + r.data.id}
+            >
+              پیام به فروشگاه
+            </AppLink>
             <p className="muted">
               ارسال: {r.data.shipping_days} روز ·{" "}
               {price(r.data.shipping_fee_minor)}
@@ -350,13 +403,14 @@ export function CartPage({ checkout = false }: { checkout?: boolean }) {
     addresses = useResource<Address[]>(
       checkout && c.user ? "/v1/me/addresses" : null,
     );
+  const [couponCode, setCouponCode] = useState("");
   const [addressId, setAddressId] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   const checkoutKey = useRef(crypto.randomUUID());
   useEffect(() => {
     checkoutKey.current = crypto.randomUUID();
-  }, [c.cart, addressId]);
+  }, [c.cart, addressId, couponCode]);
   const total = c.cart.reduce(
     (t, x) => t + BigInt(x.priceMinor) * BigInt(x.quantity),
     0n,
@@ -420,6 +474,15 @@ export function CartPage({ checkout = false }: { checkout?: boolean }) {
           </p>
           {checkout ? (
             <>
+              <label className="standalone-label">
+                کد تخفیف (اختیاری)
+                <input
+                  dir="ltr"
+                  value={couponCode}
+                  maxLength={32}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                />
+              </label>
               <ErrorBox message={addresses.error} />
               <label className="standalone-label">
                 نشانی ارسال
@@ -450,6 +513,9 @@ export function CartPage({ checkout = false }: { checkout?: boolean }) {
                       "POST",
                       {
                         addressId: addressId || addresses.data?.[0]?.id,
+                        ...(couponCode.trim()
+                          ? { couponCode: couponCode.trim() }
+                          : {}),
                         items: c.cart.map((x) => ({
                           variantId: x.variantId,
                           quantity: x.quantity,
@@ -568,6 +634,35 @@ export function OrderPage({ seller = false }: { seller?: boolean }) {
               ))}
             </div>
             <p>{date(o.created_at)}</p>
+            <div className="button-row">
+              <AppLink href={"/invoice/?id=" + o.id}>فاکتور و چاپ</AppLink>
+              <AppLink href="/returns/">درخواست‌های مرجوعی</AppLink>
+            </div>
+            {!seller && ["shipped", "completed"].includes(o.status) && (
+              <details className="ticket">
+                <summary>درخواست مرجوعی این سفارش</summary>
+                <Form
+                  fields={[
+                    {
+                      name: "reason",
+                      label: "دلیل و شرح مشکل",
+                      type: "textarea",
+                      minLength: 5,
+                      required: true,
+                    },
+                  ]}
+                  label="ثبت درخواست"
+                  submit={(v) =>
+                    c.request(`/v1/me/orders/${o.id}/return`, "POST", v)
+                  }
+                />
+              </details>
+            )}
+            {o.discount_minor && BigInt(o.discount_minor) > 0n && (
+              <p>
+                تخفیف {o.coupon_code}: {price(o.discount_minor)}
+              </p>
+            )}
             {o.items?.map((x) => (
               <div key={x.id} className="commerce-row">
                 <span>
@@ -770,8 +865,17 @@ export function NotificationsPage({ seller = false }: { seller?: boolean }) {
           r.data.map((n) => (
             <div className="commerce-row" key={n.id}>
               <div>
-                <b>{labels[n.kind] ?? n.kind}</b>
+                <b>{n.title ?? labels[n.kind] ?? n.kind}</b>
+                {n.body && <p>{n.body}</p>}
                 <small>{date(n.created_at)}</small>
+                {n.product_id && (
+                  <AppLink
+                    className="text-link"
+                    href={"/product/?id=" + n.product_id}
+                  >
+                    دیدن کالا
+                  </AppLink>
+                )}
                 {n.order_id && (
                   <AppLink
                     className="text-link"

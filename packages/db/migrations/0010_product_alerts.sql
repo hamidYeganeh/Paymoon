@@ -1,0 +1,3 @@
+CREATE TABLE commerce.product_alerts(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user_id uuid NOT NULL REFERENCES commerce.users(id),product_id uuid NOT NULL REFERENCES commerce.products(id),kind text NOT NULL CHECK(kind IN('price','restock')),target_minor bigint CHECK(target_minor>0),active boolean NOT NULL DEFAULT true,created_at timestamptz NOT NULL DEFAULT now(),notified_at timestamptz,CHECK(kind<>'price' OR target_minor IS NOT NULL),UNIQUE(user_id,product_id,kind));
+CREATE INDEX product_alert_pending ON commerce.product_alerts(created_at) WHERE active;
+ALTER TABLE commerce.user_notifications ADD COLUMN product_id uuid REFERENCES commerce.products(id);

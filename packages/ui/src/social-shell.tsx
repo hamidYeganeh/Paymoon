@@ -67,6 +67,14 @@ export function ShopSuggestions({ tray = false }: { tray?: boolean }) {
 }
 const titles: Record<string, string> = {
   "/search": "جست‌وجو",
+  "/customers": "مشتریان",
+  "/discounts": "تخفیف‌ها",
+  "/reports": "گزارش فروش",
+  "/campaigns": "کمپین",
+  "/imports": "ورود گروهی",
+  "/stock-alerts": "کمبود موجودی",
+  "/shops": "فروشگاه‌ها",
+  "/invoice": "فاکتور",
   "/comments": "پرسش و نظر",
   "/saved": "ذخیره‌شده‌ها",
   "/orders": "سفارش‌ها",
@@ -140,11 +148,14 @@ export function SocialShell({
         ["/notifications", "heart", "اعلان‌ها"],
         ["/products/new", "plus", "ایجاد محصول"],
         ["/ledger", "ledger", "دفتر مالی"],
+        ["/customers", "team", "مشتریان"],
+        ["/reports", "ledger", "گزارش فروش"],
         ["/team", "team", "همکاران"],
       ]
     : [
         ["/", "home", "خانه"],
         ["/search", "search", "جست‌وجو"],
+        ["/shops", "grid", "فروشگاه‌ها"],
         ["/following", "explore", "دنبال‌شده‌ها"],
         ["/notifications", "heart", "اعلان‌ها"],
         ["/saved", "bookmark", "ذخیره‌ها"],

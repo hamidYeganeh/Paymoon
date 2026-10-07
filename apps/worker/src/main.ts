@@ -7,6 +7,7 @@ import {
   QUEUE,
   routeInstagramInbox,
   expireOrders,
+  processProductAlerts,
   consumeEvent,
   pruneTransientData,
 } from "@paymoon/events";
@@ -46,6 +47,7 @@ function poll() {
   if (stopping || active) return;
   active = transaction(pool, async (c) => {
     await expireOrders(c);
+    await processProductAlerts(c);
     if (Date.now() - lastRetention > 3600000) {
       await pruneTransientData(c);
       lastRetention = Date.now();

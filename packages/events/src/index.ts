@@ -184,6 +184,42 @@ export async function consumeEvent(c: PoolClient, eventId: string) {
   );
   return true;
 }
+// Only qualifying rows enter the bounded batch, so inactive price targets do not
+// starve newer watches. A watch is delivered once per explicit subscription.
+export async function processProductAlerts(c: PoolClient) {
+  const alerts = (
+    await c.query(`
+    SELECT a.id,a.user_id,a.product_id,a.kind,p.title
+    FROM commerce.product_alerts a
+    JOIN commerce.products p ON p.id=a.product_id
+    JOIN commerce.merchants m ON m.organization_id=p.organization_id
+    JOIN LATERAL (SELECT min(v.price_minor) AS price FROM commerce.variants v
+      JOIN commerce.inventory i ON i.variant_id=v.id
+      WHERE v.product_id=p.id AND v.price_minor>0 AND i.available>0) stock ON true
+    WHERE a.active AND p.status='published' AND m.status='approved'
+      AND stock.price IS NOT NULL AND (a.kind='restock' OR stock.price<=a.target_minor)
+    ORDER BY a.created_at,a.id LIMIT 50 FOR UPDATE OF a SKIP LOCKED
+  `)
+  ).rows;
+  for (const a of alerts) {
+    await c.query(
+      "UPDATE commerce.product_alerts SET active=false,notified_at=now() WHERE id=$1",
+      [a.id],
+    );
+    await c.query(
+      "INSERT INTO commerce.user_notifications(user_id,product_id,kind,title,body) VALUES($1,$2,$3,$4,$5)",
+      [
+        a.user_id,
+        a.product_id,
+        "product." + a.kind,
+        a.kind === "restock" ? "کالا موجود شد" : "کالا به قیمت دلخواه رسید",
+        a.title + " — قیمت و موجودی را پیش از خرید بررسی کنید.",
+      ],
+    );
+  }
+  return alerts.length;
+}
+
 export async function maintenanceBatch(c: PoolClient, retention = false) {
   await c.query("SET LOCAL statement_timeout = '10000ms'");
   await c.query("SET LOCAL lock_timeout = '500ms'");
@@ -193,7 +229,13 @@ export async function maintenanceBatch(c: PoolClient, retention = false) {
     )
   ).rows[0].acquired;
   if (!locked)
-    return { skipped: true, expiredOrders: 0, inbox: 0, notifications: 0 };
+    return {
+      skipped: true,
+      expiredOrders: 0,
+      inbox: 0,
+      notifications: 0,
+      productAlerts: 0,
+    };
   const expiredOrders = await expireOrders(c);
   const inbox = await routeInstagramInbox(c);
   const events = (
@@ -203,8 +245,15 @@ export async function maintenanceBatch(c: PoolClient, retention = false) {
     )
   ).rows;
   for (const event of events) await consumeEvent(c, event.id);
+  const productAlerts = await processProductAlerts(c);
   if (retention) await pruneTransientData(c);
-  return { skipped: false, expiredOrders, inbox, notifications: events.length };
+  return {
+    skipped: false,
+    expiredOrders,
+    inbox,
+    notifications: events.length,
+    productAlerts,
+  };
 }
 
 export async function pruneTransientData(c: PoolClient) {

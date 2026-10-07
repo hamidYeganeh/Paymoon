@@ -108,3 +108,9 @@ export function moveStock(
     throw new Error("Insufficient stock");
   return next;
 }
+
+export {
+  parseProductCsv,
+  PRODUCT_CSV_HEADER,
+  type ProductCsvRow,
+} from "./product-csv";

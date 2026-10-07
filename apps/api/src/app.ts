@@ -1,3 +1,8 @@
+import { AlertsModule } from "./modules/growth/alerts.module";
+import { InboxModule } from "./modules/growth/inbox.module";
+import { DiscoveryModule } from "./modules/growth/discovery.module";
+import { ImportsModule } from "./modules/growth/imports.module";
+import { GrowthModule } from "./modules/growth/growth.module";
 import "reflect-metadata";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { MaintenanceModule } from "./modules/maintenance/maintenance.module";
@@ -64,6 +69,11 @@ class HealthController {
 @Module({
   imports: [
     PlatformModule,
+    GrowthModule,
+    AlertsModule,
+    InboxModule,
+    ImportsModule,
+    DiscoveryModule,
     MaintenanceModule,
     ExperienceModule,
     SocialModule,

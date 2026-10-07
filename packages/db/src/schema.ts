@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   check,
   integer,
   jsonb,
@@ -148,6 +149,7 @@ export const inventory = commerce.table(
     available: integer("available").notNull().default(0),
     reserved: integer("reserved").notNull().default(0),
     committed: integer("committed").notNull().default(0),
+    lowStockThreshold: integer("low_stock_threshold").notNull().default(3),
   },
   (t) => [
     check(
@@ -173,6 +175,10 @@ export const orders = commerce.table("orders", {
   organizationId: uuid("organization_id")
     .notNull()
     .references(() => organizations.id),
+  discountMinor: bigint("discount_minor", { mode: "bigint" })
+    .notNull()
+    .default(0n),
+  couponCode: text("coupon_code"),
   shippingAddress: jsonb("shipping_address").notNull().default({}),
   shippingFeeMinor: bigint("shipping_fee_minor", { mode: "bigint" })
     .notNull()
@@ -435,7 +441,36 @@ export const supportTickets = commerce.table("support_tickets", {
   reply: text("reply"),
   createdAt: created(),
 });
+export const productAlerts = commerce.table(
+  "product_alerts",
+  {
+    id: id(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id),
+    kind: text("kind").notNull(),
+    targetMinor: bigint("target_minor", { mode: "bigint" }),
+    active: boolean("active").notNull().default(true),
+    createdAt: created(),
+    notifiedAt: timestamp("notified_at", { withTimezone: true }),
+  },
+  (t) => [
+    unique("product_alert_subscription").on(t.userId, t.productId, t.kind),
+    check("product_alert_kind", sql`${t.kind} in ('price','restock')`),
+    check(
+      "product_alert_target",
+      sql`(${t.targetMinor} is null or ${t.targetMinor}>0) and (${t.kind}<>'price' or ${t.targetMinor} is not null)`,
+    ),
+  ],
+);
 export const userNotifications = commerce.table("user_notifications", {
+  title: text("title"),
+  body: text("body"),
+  productId: uuid("product_id").references(() => products.id),
+  campaignId: uuid("campaign_id").references(() => campaigns.id),
   id: id(),
   userId: uuid("user_id")
     .notNull()
@@ -495,5 +530,125 @@ export const productComments = commerce.table("product_comments", {
     .references(() => users.id),
   body: text("body").notNull(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  createdAt: created(),
+});
+
+export const customerNotes = commerce.table(
+  "customer_notes",
+  {
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    note: text("note").notNull().default(""),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.organizationId, t.userId] })],
+);
+export const coupons = commerce.table(
+  "coupons",
+  {
+    id: id(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    code: text("code").notNull(),
+    kind: text("kind").notNull(),
+    value: bigint("value", { mode: "bigint" }).notNull(),
+    minimumMinor: bigint("minimum_minor", { mode: "bigint" })
+      .notNull()
+      .default(0n),
+    maximumDiscountMinor: bigint("maximum_discount_minor", { mode: "bigint" }),
+    usageLimit: integer("usage_limit").notNull(),
+    perCustomerLimit: integer("per_customer_limit").notNull().default(1),
+    startsAt: timestamp("starts_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    active: boolean("active").notNull().default(true),
+    createdAt: created(),
+  },
+  (t) => [unique().on(t.organizationId, t.code)],
+);
+export const couponRedemptions = commerce.table(
+  "coupon_redemptions",
+  {
+    couponId: uuid("coupon_id")
+      .notNull()
+      .references(() => coupons.id),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id),
+    buyerId: uuid("buyer_id")
+      .notNull()
+      .references(() => users.id),
+    discountMinor: bigint("discount_minor", { mode: "bigint" }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.couponId, t.orderId] })],
+);
+export const campaigns = commerce.table("campaigns", {
+  id: id(),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  segment: text("segment").notNull(),
+  recipientCount: integer("recipient_count").notNull().default(0),
+  createdAt: created(),
+});
+export const returnRequests = commerce.table("return_requests", {
+  id: id(),
+  orderId: uuid("order_id")
+    .notNull()
+    .unique()
+    .references(() => orders.id),
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organizations.id),
+  buyerId: uuid("buyer_id")
+    .notNull()
+    .references(() => users.id),
+  reason: text("reason").notNull(),
+  status: text("status").notNull().default("requested"),
+  sellerReply: text("seller_reply").notNull().default(""),
+  createdAt: created(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const conversations = commerce.table(
+  "conversations",
+  {
+    id: id(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    buyerId: uuid("buyer_id")
+      .notNull()
+      .references(() => users.id),
+    status: text("status").notNull().default("open"),
+    assignedTo: uuid("assigned_to").references(() => users.id),
+    createdAt: created(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [unique().on(t.organizationId, t.buyerId)],
+);
+export const conversationMessages = commerce.table("conversation_messages", {
+  id: id(),
+  conversationId: uuid("conversation_id")
+    .notNull()
+    .references(() => conversations.id),
+  authorId: uuid("author_id")
+    .notNull()
+    .references(() => users.id),
+  body: text("body").notNull(),
   createdAt: created(),
 });

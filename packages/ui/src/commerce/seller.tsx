@@ -1,4 +1,5 @@
 "use client";
+import { InstagramDemo } from "./growth";
 import { useRouter } from "next/navigation";
 import { AppLink } from "../motion";
 import { useEffect, useState, type FormEvent } from "react";
@@ -723,6 +724,7 @@ export function InstagramPage() {
   return (
     <Gate seller>
       <Panel title="اینستاگرام فروشگاه">
+        <InstagramDemo />
         <ErrorBox message={r.error} />
         {r.loading && <Loading />}
         {r.data && !r.data.configured && (

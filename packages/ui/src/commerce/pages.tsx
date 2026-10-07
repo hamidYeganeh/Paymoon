@@ -1,4 +1,18 @@
 "use client";
+import { ProductAlertsPage } from "./alerts";
+import { InboxPage } from "./inbox";
+import { LinkSearchPage, SimilarPage } from "./discovery";
+import {
+  CustomersPage,
+  DiscountsPage,
+  CampaignsPage,
+  ReportsPage,
+  ImportsPage,
+  StockAlertsPage,
+  ReturnsPage,
+  InvoicePage,
+  ShopsPage,
+} from "./growth";
 import { CommentsPage } from "./comments";
 import { AppLink, useAppearance } from "../motion";
 import { SocialIcon } from "../icons";
@@ -108,6 +122,21 @@ export function SettingsPage({ seller = false }: { seller?: boolean }) {
         )}
         <div className="menu-list">
           {[
+            ...(seller
+              ? [
+                  ["/customers/", "مشتریان"],
+                  ["/discounts/", "تخفیف‌ها"],
+                  ["/campaigns/", "کمپین"],
+                  ["/reports/", "گزارش فروش"],
+                  ["/imports/", "ورود گروهی"],
+                  ["/stock-alerts/", "کمبود موجودی"],
+                ]
+              : [
+                  ["/shops/", "کشف فروشگاه‌ها"],
+                  ["/alerts/", "خبرم کن"],
+                ]),
+            ["/messages/", "پیام‌ها"],
+            ["/returns/", "مرجوعی"],
             ["/support/", "پشتیبانی"],
             ["/help/", "راهنمای پی‌مون"],
             ["/privacy/", "حریم خصوصی"],
@@ -473,6 +502,13 @@ export function CommercePage({
     return <AuthPage register={page === "register"} seller={seller} />;
   if (["help", "terms", "privacy"].includes(page))
     return <InfoPage page={page} seller={seller} />;
+  if (page === "alerts") return <ProductAlertsPage />;
+  if (page === "messages") return <InboxPage seller={seller} />;
+  if (page === "invoice") return <InvoicePage seller={seller} />;
+  if (page === "returns") return <ReturnsPage seller={seller} />;
+  if (page === "link-search") return <LinkSearchPage />;
+  if (page === "similar") return <SimilarPage />;
+  if (page === "shops") return <ShopsPage />;
   if (page === "comments") return <CommentsPage />;
   if (page === "settings") return <SettingsPage seller={seller} />;
   if (app === "admin") return <AdminPage page={page} />;
@@ -481,6 +517,18 @@ export function CommercePage({
   if (page === "support") return <SupportPage />;
   if (seller) {
     switch (page) {
+      case "customers":
+        return <CustomersPage />;
+      case "discounts":
+        return <DiscountsPage />;
+      case "campaigns":
+        return <CampaignsPage />;
+      case "reports":
+        return <ReportsPage />;
+      case "imports":
+        return <ImportsPage />;
+      case "stock-alerts":
+        return <StockAlertsPage />;
       case "home":
       case "profile":
         return <SellerDashboard />;

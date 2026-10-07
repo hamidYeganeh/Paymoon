@@ -6,6 +6,8 @@
 
 [گزارش کامل فارسی، امکانات، envها، migrationها و محدودیت‌ها](docs/product-release.fa.md) مرجع نسخهٔ فعلی است. تصمیم‌های معماری در `docs/adr/` و طرح رویدادهای محصول در `.telemetry/` قرار دارند.
 
+[قابلیت‌های جدید فروشگاه، تحقیق رقبا، مسیرها، migrationها و محدودیت‌ها](docs/merchant-growth.fa.md) شامل CRM، تخفیف، کمپین داخلی، گزارش، ورود CSV، مرجوعی، پیام تیمی و هشدار قیمت/موجودی است.
+
 ## ساختار
 
 - `apps/marketplace`: Next.js، پورت 4100؛ فید، جست‌وجو، محصول، فروشگاه، ذخیره‌ها، سبد، نشانی، سفارش و حساب.
@@ -36,9 +38,9 @@ Swagger: `http://localhost:4000/docs`؛ OpenAPI: `http://localhost:4000/openapi.
 ## بررسی‌ها
 
 ```sh
-pnpm lint
-pnpm typecheck
 pnpm build
+pnpm typecheck
+pnpm lint
 # پس از فراهم‌کردن و migrate کردن دیتابیس جداگانهٔ تست:
 COMMERCE_DATABASE_TEST_URL='postgresql://.../paymoon_test' \
 COMMERCE_REDIS_TEST_URL='redis://localhost:56379/1' pnpm test
@@ -64,6 +66,6 @@ JAVA_HOME=/path/to/jdk-21 ANDROID_HOME=/path/to/android-sdk pnpm android:apk
 
 APK آزمایشی در `apps/<app>/android/app/build/outputs/apk/debug/` است. API پیش‌فرض localhost روی گوشی به رایانه وصل نمی‌شود؛ بعد از تنظیم API عمومی HTTPS و `NEXT_PUBLIC_API_URL`، APK را دوباره بسازید. خروجی انتشار نیازمند کلید امضای انتشار است.
 
-برای Instagram، envهای App ID/Secret، redirect، نسخهٔ API، scopeها، کلید رمزنگاری و verify token را طبق [گزارش نسخه](docs/product-release.fa.md) و `.env.example` تنظیم کنید. import فقط برای محتوای حساب حرفه‌ای متصل و مجاز است. webhook کامنت/پیام به مجوزهای مربوط نیاز دارد؛ صندوق کامل پیام و ارسال پاسخ هنوز پیاده نشده‌اند.
+برای Instagram، envهای App ID/Secret، redirect، نسخهٔ API، scopeها، کلید رمزنگاری و verify token را طبق [گزارش نسخه](docs/product-release.fa.md) و `.env.example` تنظیم کنید. import فقط برای محتوای حساب حرفه‌ای متصل و مجاز است. webhook کامنت/پیام به مجوزهای مربوط نیاز دارد؛ صندوق پیام داخلی Paymoon آماده است؛ دریافت و پاسخ به دایرکت Instagram هنوز متصل نیست.
 
 قدم بعدی: اجرای HTTPS و تست حساب حرفه‌ای واقعی، سپس اتصال و تست درگاه واقعی. حفاظت مالی، تسویه، بازپرداخت، OTP/بازیابی رمز و زیرساخت انتشار عمومی در محدودهٔ نسخهٔ فعلی کامل نشده‌اند.

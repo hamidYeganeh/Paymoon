@@ -57,6 +57,9 @@ export type Order = {
   created_at: string;
   expires_at: string;
   paymentMode: string;
+  discount_minor?: string;
+  coupon_code?: string;
+  shipping_fee_minor?: string;
   shipping_address: Address;
   tracking_code: string;
   carrier: string;
@@ -77,8 +80,11 @@ export type Ticket = {
   created_at: string;
 };
 export type Notice = {
+  product_id?: string | null;
   id: string;
   kind: string;
+  title?: string;
+  body?: string;
   order_id: string;
   read_at: string;
   created_at: string;
