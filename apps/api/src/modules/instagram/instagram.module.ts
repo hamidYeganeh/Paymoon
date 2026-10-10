@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { FastifyReply } from "fastify";
 import { OrganizationsModule } from "../organizations/organizations.module";
 import { InstagramService } from "./instagram.service";
+import { BoxApiTestController } from "./boxapi-test.controller";
 import {
   Controller,
   ForbiddenException,
@@ -194,6 +195,7 @@ export class InstagramOAuthController {
 @Module({
   imports: [OrganizationsModule, IdentityModule],
   controllers: [
+    BoxApiTestController,
     InstagramController,
     InstagramConnectionController,
     InstagramOAuthController,

@@ -59,6 +59,10 @@ const envSchema = z.object({
     }),
   INSTAGRAM_APP_SECRET: z.string().min(16).optional(),
   INSTAGRAM_VERIFY_TOKEN: z.string().min(16).optional(),
+  BOXAPI_WEBHOOK_SECRET: z.string().min(16).optional(),
+  BOXAPI_TEST_ACCOUNT_ID: z.uuid().optional(),
+  BOXAPI_TEST_STATUS_TOKEN: z.string().min(32).optional(),
+  BOXAPI_TEST_EXPIRES_AT: z.iso.datetime().optional(),
 });
 export function readConfig(env: NodeJS.ProcessEnv = process.env) {
   const result = envSchema.parse({
